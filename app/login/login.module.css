@@ -12,11 +12,11 @@
 }
 
 .title {
-  font-size: 28px;
-  margin-bottom: 20px;
   text-align: center;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 20px;
 }
-
 .input {
   width: 100%;
   padding: 10px;
@@ -24,20 +24,14 @@
   border-radius: 8px;
   margin-bottom: 15px;
 }
-
 .button {
   width: 100%;
   padding: 12px;
   background: #2563eb;
   color: white;
+  font-weight: bold;
   border-radius: 8px;
   margin-top: 10px;
-}
-.backButton {
-  margin-bottom: 15px;
-  background: transparent;
-  border: none;
-  color: #555;
-  font-size: 16px;
   cursor: pointer;
+  transition: opacity 0.2s;
 }

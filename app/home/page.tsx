@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import sessionFacade from "@/facade/sessionFacade";
+import authFacade from "@/facade/authFacade"; // ✅ CAMBIO AQUÍ
 import dynamic from "next/dynamic";
 
 import HomeNavbar from "@/components/HomeNavbar";
@@ -15,19 +15,23 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!sessionFacade.isLogged()) {
-      router.push("/");
-    }
-  }, []);
+  console.log("TOKEN EN HOME:", localStorage.getItem("token"));
+
+  if (!authFacade.isLogged()) {
+    console.log("ME ECHA POR isLogged = FALSE");
+    router.push("/");
+  } else {
+    console.log("SESION OK");
+  }
+}, []);
 
   return (
     <>
       <HomeNavbar />
-
-      {/* Contenedor para evitar que el navbar tape parte del mapa */}
       <div style={{ paddingTop: "65px" }}>
         <MapaPrincipal />
       </div>
     </>
   );
+
 }

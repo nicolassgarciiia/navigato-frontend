@@ -1,24 +1,44 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import authFacade from "@/facade/authFacade";
 import styles from "./login.module.css";
+import Navbar from "@/components/Navbar";
 
-export default function LoginPage() {
+// 1. Extraemos la lógica del formulario a un componente interno
+function LoginForm() {
   const [correo, setCorreo] = useState("");
   const [contraseña, setContraseña] = useState("");
+  const [loading, setLoading] = useState(false);
+  
   const router = useRouter();
+  const searchParams = useSearchParams(); // Hook para leer la URL (?email=...)
 
-  const handleLogin = async () => {
+  // 2. EFECTO: Si hay un email en la URL, lo rellenamos automáticamente
+  useEffect(() => {
+    const emailFromUrl = searchParams.get("email");
+    if (emailFromUrl) {
+      setCorreo(emailFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // Lógica limpia: Sin try/catch
     const res = await authFacade.login(correo, contraseña);
 
     if (res.ok) {
-      alert("Sesión iniciada correctamente");
+      // ÉXITO
       router.push("/home");
     } else {
-      alert("Error: " + res.error);
+      // ERROR (Contraseña mal, usuario no existe...)
+      alert(res.error);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -26,11 +46,47 @@ export default function LoginPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>Inicia sesión</h1>
 
-        <input type="email" placeholder="Correo" className={styles.input} onChange={(e) => setCorreo(e.target.value)} />
-        <input type="password" placeholder="Contraseña" className={styles.input} onChange={(e) => setContraseña(e.target.value)} />
+        <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <input
+            type="email"
+            placeholder="Correo"
+            className={styles.input}
+            value={correo} // Vinculado al estado
+            onChange={(e) => setCorreo(e.target.value)}
+            required
+          />
+          
+          <input
+            type="password"
+            placeholder="Contraseña"
+            className={styles.input}
+            value={contraseña}
+            onChange={(e) => setContraseña(e.target.value)}
+            required
+          />
 
-        <button className={styles.button} onClick={handleLogin}>Iniciar sesión</button>
+          <button 
+            type="submit" 
+            className={styles.button} 
+            disabled={loading}
+          >
+            {loading ? "Entrando..." : "Iniciar sesión"}
+          </button>
+        </form>
       </div>
     </div>
+  );
+}
+
+// 3. Componente Principal que envuelve el formulario en Suspense
+export default function LoginPage() {
+  return (
+    <>
+      <Navbar />
+      {/* Suspense es necesario en Next.js cuando usamos useSearchParams */}
+      <Suspense fallback={<div className={styles.container}>Cargando...</div>}>
+        <LoginForm />
+      </Suspense>
+    </>
   );
 }

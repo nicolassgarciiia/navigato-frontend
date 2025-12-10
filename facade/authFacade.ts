@@ -1,79 +1,86 @@
-const API_URL = "http://localhost:3001";
+import { loginUser, registerUser, deleteAccount as apiDeleteAccount } from "../lib/api";
 
-const authFacade = {
-  saveUser(user: any) {
-    localStorage.setItem("user", JSON.stringify(user));
+// --- FUNCIONES AUXILIARES PRIVADAS ---
+function saveSession(accessToken: string, user: any) {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("user_info", JSON.stringify(user));
+  }
+}
+
+function logoutLocal() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_info");
+  }
+}
+
+// --- FACADE PÚBLICO ---
+export const authFacade = {
+  
+  // GETTERS
+  getToken() {
+    if (typeof window !== "undefined") return localStorage.getItem("access_token");
+    return null;
   },
 
   getUser() {
-    const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
-  },
-
-  logoutLocal() {
-    localStorage.removeItem("user");
+    if (typeof window !== "undefined") {
+      const userStr = localStorage.getItem("user_info");
+      return userStr ? JSON.parse(userStr) : null;
+    }
+    return null;
   },
 
   isLogged() {
-    return localStorage.getItem("user") !== null;
+    if (typeof window !== "undefined") return !!localStorage.getItem("access_token");
+    return false;
   },
 
-  //----------------------------------------------------
-  // CALLS AL BACKEND
-  //----------------------------------------------------
+  // LOGIN
   async login(correo: string, contraseña: string) {
-    try {
-      const res = await fetch(`${API_URL}/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo, contraseña }),
-      });
+    // 1. Llamada a API (ya no lanza throw)
+    const response = await loginUser(correo, contraseña);
 
-      const json = await res.json();
-
-      if (json.ok && json.user) {
-        this.saveUser(json.user);
-      }
-
-      return json;
-    } catch {
-      return { ok: false, error: "Error de conexión" };
+    // 2. Si falló, devolvemos el error directo
+    if (!response.ok) {
+      return { ok: false, error: response.error };
     }
+
+    // 3. Si éxito, guardamos sesión
+    if (response.access_token) {
+      saveSession(response.access_token, response.user);
+      return { ok: true, user: response.user };
+    } 
+    
+    return { ok: false, error: "Error desconocido: Token no recibido." };
   },
 
+  // REGISTER
   async register(data: any) {
-    try {
-      const res = await fetch(`${API_URL}/users/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const json = await res.json();
-
-      if (json.ok && json.user) {
-        this.saveUser(json.user);
-      }
-
-      return json;
-    } catch {
-      return { ok: false, error: "Error de conexión" };
-    }
+    const response = await registerUser(data);
+    // Pasamos la respuesta tal cual (ok: true/false)
+    return response;
   },
 
-  async logout() {
-    const user = this.getUser();
-    if (!user) return;
+  // DELETE ACCOUNT
+  async deleteAccount(correo: string) {
+    const response = await apiDeleteAccount(correo);
 
-    try {
-      await fetch(`${API_URL}/users/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo: user.correo }),
-      });
-    } catch (_) {}
+    if (response.ok) {
+      this.logout(); // Limpiamos sesión local si se borró con éxito
+      return { ok: true };
+    }
 
-    this.logoutLocal();
+    return { ok: false, error: response.error };
+  },
+
+  // LOGOUT
+  logout() {
+    logoutLocal();
+    if (typeof window !== "undefined") {
+        window.location.href = "/";
+    }
   },
 };
 

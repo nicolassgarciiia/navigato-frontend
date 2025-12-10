@@ -7,17 +7,21 @@ export default function HomePage() {
       <Navbar />
 
       <div className={styles.container}>
-        <h1 className={styles.title}>Navigato</h1>
+        <h1 className={styles.title}>
+          Encuentra siempre la ruta que mejor se adapte a tus necesidades
+        </h1>
+
         <p className={styles.subtitle}>
-          La aplicación de cálculo de rutas creada por <br />
-          Nicolás Garcia Edo · Alberto del Olmo Barres · Matías Aguilar Barría
+          Navega con facilidad y descubre nuevos destinos con nuestra plataforma
         </p>
 
-        <img
-          className={styles.map}
-          src="/mapa_portada.jpg"
-          alt="Mapa ilustrativo"
-        />
+        <div className={styles.imageContainer}>
+          <img
+            className={styles.mapImage}
+            src="/mapa_portada.png"
+            alt="Interfaz de navegación"
+          />
+        </div>
       </div>
     </>
   );
