@@ -1,0 +1,81 @@
+/* Contenedor principal que ocupa toda la pantalla */
+.main {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Evita scrolls innecesarios */
+  background-color: #f0f0f0;
+}
+
+/* --- HEADER FLOTANTE --- */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem 2rem; /* Espaciado interno */
+  display: flex;
+  justify-content: space-between; /* Separa los elementos (izq, centro, der) */
+  align-items: center;
+  z-index: 50; /* Asegura que esté por encima del mapa */
+  
+  /* Truco: permite hacer clic en el mapa a través del header transparente */
+  pointer-events: none; 
+}
+
+/* Botones redondos (Hamburguesa y Perfil) */
+.iconBtn {
+  /* Reactivamos los clicks para los botones */
+  pointer-events: auto;
+  
+  background-color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  cursor: pointer;
+  color: #333;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.iconBtn:hover {
+  background-color: #f9f9f9;
+  transform: scale(1.05);
+}
+
+/* Logo central */
+.logoContainer {
+  pointer-events: auto;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logoText {
+  font-family: sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #2563eb; /* Azul similar a Navigato */
+}
+
+/* --- MAPA --- */
+.mapContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Al fondo del todo */
+}
+
+.mapImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Asegura que la imagen cubra todo sin deformarse */
+  display: block;
+}

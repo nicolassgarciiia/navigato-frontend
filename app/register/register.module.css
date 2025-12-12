@@ -1,0 +1,51 @@
+.container {
+  display: flex;
+  justify-content: center;
+  margin-top: 80px;
+}
+
+.card {
+  border: 1px solid #d1d5db;
+  padding: 30px;
+  border-radius: 10px;
+  width: 350px;
+  background: white;
+}
+
+.title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.button {
+  width: 100%;
+  padding: 12px;
+  background: #22c55e;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
