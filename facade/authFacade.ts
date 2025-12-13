@@ -1,86 +1,120 @@
 import { loginUser, registerUser, deleteAccount as apiDeleteAccount } from "../lib/api";
 
-// --- FUNCIONES AUXILIARES PRIVADAS ---
-function saveSession(accessToken: string, user: any) {
-  if (typeof window !== "undefined") {
+// --- TIPOS ---
+interface User {
+  [key: string]: any;
+}
+
+interface AuthResponse {
+  ok: boolean;
+  user?: User;
+  error?: string;
+  needsVerification?: boolean; 
+}
+
+const isBrowser = typeof window !== "undefined";
+
+function saveSession(accessToken: string, user: User) {
+  if (isBrowser) {
     localStorage.setItem("access_token", accessToken);
     localStorage.setItem("user_info", JSON.stringify(user));
   }
 }
 
 function logoutLocal() {
-  if (typeof window !== "undefined") {
+  if (isBrowser) {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user_info");
   }
 }
 
-// --- FACADE PÚBLICO ---
 export const authFacade = {
   
-  // GETTERS
-  getToken() {
-    if (typeof window !== "undefined") return localStorage.getItem("access_token");
+  // ... (Getters se mantienen igual) ...
+  getToken(): string | null {
+    if (isBrowser) return localStorage.getItem("access_token");
     return null;
   },
 
-  getUser() {
-    if (typeof window !== "undefined") {
+  getUser(): User | null {
+    if (isBrowser) {
       const userStr = localStorage.getItem("user_info");
-      return userStr ? JSON.parse(userStr) : null;
+      if (!userStr) return null;
+      try {
+        return JSON.parse(userStr);
+      } catch (e) {
+        logoutLocal(); 
+        return null;
+      }
     }
     return null;
   },
 
-  isLogged() {
-    if (typeof window !== "undefined") return !!localStorage.getItem("access_token");
+  isLogged(): boolean {
+    if (isBrowser) return !!localStorage.getItem("access_token");
     return false;
   },
 
-  // LOGIN
-  async login(correo: string, contraseña: string) {
-    // 1. Llamada a API (ya no lanza throw)
-    const response = await loginUser(correo, contraseña);
 
-    // 2. Si falló, devolvemos el error directo
-    if (!response.ok) {
-      return { ok: false, error: response.error };
+  async login(correo: string, contraseña: string): Promise<AuthResponse> {
+    try {
+      const response = await loginUser(correo, contraseña);
+
+      if (!response.ok) {
+        
+
+        const errorMsg = response.error || "";
+        const isNotVerified = errorMsg.includes("verify") || errorMsg.includes("verificado") || errorMsg === "EMAIL_NOT_VERIFIED";
+
+        if (isNotVerified) {
+            return { 
+                ok: false, 
+                error: "Debes verificar tu correo electrónico antes de entrar.",
+                needsVerification: true 
+            };
+        }
+
+        return { ok: false, error: errorMsg || "Credenciales incorrectas" };
+      }
+
+      // CASO ÉXITO
+      if (response.access_token) {
+        saveSession(response.access_token, response.user);
+        return { ok: true, user: response.user };
+      } 
+      
+      return { ok: false, error: "Error desconocido: Token no recibido." };
+
+    } catch (error) {
+      return { ok: false, error: "Error de conexión." };
     }
-
-    // 3. Si éxito, guardamos sesión
-    if (response.access_token) {
-      saveSession(response.access_token, response.user);
-      return { ok: true, user: response.user };
-    } 
-    
-    return { ok: false, error: "Error desconocido: Token no recibido." };
   },
 
-  // REGISTER
-  async register(data: any) {
-    const response = await registerUser(data);
-    // Pasamos la respuesta tal cual (ok: true/false)
-    return response;
-  },
 
-  // DELETE ACCOUNT
-  async deleteAccount(correo: string) {
-    const response = await apiDeleteAccount(correo);
-
-    if (response.ok) {
-      this.logout(); // Limpiamos sesión local si se borró con éxito
-      return { ok: true };
+  async register(data: any): Promise<AuthResponse> {
+    try {
+        return await registerUser(data);
+    } catch (error) {
+        return { ok: false, error: "Error de conexión." };
     }
-
-    return { ok: false, error: response.error };
   },
 
-  // LOGOUT
+  async deleteAccount(correo: string): Promise<AuthResponse> {
+    try {
+        const response = await apiDeleteAccount(correo);
+        if (response.ok) {
+          authFacade.logout(); 
+          return { ok: true };
+        }
+        return { ok: false, error: response.error };
+    } catch (error) {
+        return { ok: false, error: "Error al eliminar cuenta." };
+    }
+  },
+
   logout() {
     logoutLocal();
-    if (typeof window !== "undefined") {
-        window.location.href = "/";
-    }
+    if (isBrowser) window.location.href = "/";
   },
 };
 
