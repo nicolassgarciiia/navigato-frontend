@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import authFacade from "@/facade/authFacade";
 import styles from "./HomeNavbar.module.css";
 
-export default function HomeNavbar() {
+// Añadimos la prop para controlar el Sidebar desde aquí
+interface HomeNavbarProps {
+  onToggleSidebar: () => void;
+}
+
+export default function HomeNavbar({ onToggleSidebar }: HomeNavbarProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -43,16 +48,23 @@ export default function HomeNavbar() {
 
   return (
     <nav className={styles.navbar}>
-      {/* LOGO */}
-      <div className={styles.logo} onClick={() => router.push("/home")}>
-  <img
-    src="/transparente.png"
-    alt="Navigato"
-    className={styles.logoImage}
-  />
-</div>
+      {/* SECCIÓN IZQUIERDA: HAMBURGUESA */}
+      <div className={styles.leftSection}>
+        <button className={styles.hamburgerBtn} onClick={onToggleSidebar}>
+          ☰
+        </button>
+      </div>
 
-      {/* USUARIO */}
+      {/* SECCIÓN CENTRAL: LOGO */}
+      <div className={styles.logo} onClick={() => router.push("/home")}>
+        <img
+          src="/transparente.png"
+          alt="Navigato"
+          className={styles.logoImage}
+        />
+      </div>
+
+      {/* SECCIÓN DERECHA: USUARIO (Tu lógica intacta) */}
       {user && (
         <div className={styles.userSection} ref={menuRef}>
           <button
@@ -67,28 +79,17 @@ export default function HomeNavbar() {
               {user.nombre ? user.nombre.charAt(0).toUpperCase() : "U"}
             </div>
 
-            <svg
-              className={styles.chevron}
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
+            <svg className={styles.chevron} viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>
 
           {isOpen && (
             <div className={styles.dropdown}>
-
               <button className={styles.menuItem} onClick={handleLogout}>
                 Cerrar sesión
               </button>
-
               <div className={styles.divider}></div>
-
               <button
                 className={`${styles.menuItem} ${styles.deleteItem}`}
                 onClick={handleDeleteAccount}

@@ -1,0 +1,100 @@
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  width: 320px;
+  position: relative;
+}
+
+.closeBtn {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.disabled, .textarea {
+  width: 100%;
+  border: none;
+  background: #f9f9f9;
+  padding: 8px;
+  font-size: 13px;
+  color: #555;
+  border-radius: 4px;
+}
+
+.textarea {
+  height: 60px;
+  resize: none;
+}
+
+.activeInput {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid #333;
+  padding: 8px 0;
+  font-size: 14px;
+  outline: none;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.starBtn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.addBtn {
+  background: #222;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Mensaje de error debajo del input */
+.errorText {
+  color: #d32f2f; /* Rojo de error */
+  font-size: 0.75rem;
+  margin-top: 4px;
+  display: block;
+  font-weight: 500;
+}
+
+/* Borde rojo para el input cuando falla */
+.inputError {
+  border: 1px solid #d32f2f !important;
+  background-color: #fff8f8; /* Un fondo muy sutil rojo */
+}
+
+/* Estilo para el input deshabilitado (opcional) */
+.addBtn:disabled {
+  cursor: not-allowed;
+  background-color: #666;
+}
