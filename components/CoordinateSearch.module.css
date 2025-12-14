@@ -1,0 +1,78 @@
+.searchBar {
+  background: white;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  padding: 8px 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  width: fit-content;
+}
+
+.input {
+  border: none;
+  outline: none;
+  width: 250px;
+  font-size: 14px;
+  color: #333;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  margin: 0 10px;
+}
+
+.divider {
+  width: 1px;
+  height: 25px;
+  background-color: #eee;
+  margin: 0 10px;
+}
+
+.plusBtn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #333;
+  cursor: pointer;
+  font-weight: 300;
+}
+/* Contenedor padre para que el error flote debajo */
+.wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Mensaje de error integrado */
+.errorMessage {
+  position: absolute;
+  top: 110%; /* Lo sitúa justo debajo de la barra */
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #d32f2f;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #ffcdd2;
+  z-index: 10;
+  white-space: nowrap;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+/* Borde rojo sutil para el input cuando falla */
+.inputError {
+  border-bottom: 2px solid #d32f2f !important;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,33 +1,31 @@
-/* Contenedor principal que ocupa toda la pantalla */
+/* --- TUS ESTILOS (TAL CUAL) --- */
 .main {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden; /* Evita scrolls innecesarios */
+  width: 100%;
+  height: 100%;           /* 🔥 NO vh */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background-color: #f0f0f0;
 }
 
-/* --- HEADER FLOTANTE --- */
+
+
 .header {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  padding: 1rem 2rem; /* Espaciado interno */
+  padding: 1rem 2rem;
   display: flex;
-  justify-content: space-between; /* Separa los elementos (izq, centro, der) */
+  justify-content: space-between;
   align-items: center;
-  z-index: 50; /* Asegura que esté por encima del mapa */
-  
-  /* Truco: permite hacer clic en el mapa a través del header transparente */
+  z-index: 50;
   pointer-events: none; 
 }
 
-/* Botones redondos (Hamburguesa y Perfil) */
 .iconBtn {
-  /* Reactivamos los clicks para los botones */
   pointer-events: auto;
-  
   background-color: white;
   border: none;
   border-radius: 50%;
@@ -36,7 +34,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   color: #333;
   transition: transform 0.2s, background-color 0.2s;
@@ -47,7 +45,6 @@
   transform: scale(1.05);
 }
 
-/* Logo central */
 .logoContainer {
   pointer-events: auto;
   background-color: rgba(255, 255, 255, 0.9);
@@ -60,22 +57,39 @@
   font-family: sans-serif;
   font-weight: 700;
   font-size: 1.2rem;
-  color: #2563eb; /* Azul similar a Navigato */
+  color: #2563eb;
 }
 
-/* --- MAPA --- */
 .mapContainer {
-  position: absolute;
-  top: 0;
-  left: 0;
+  flex: 1;
   width: 100%;
-  height: 100%;
-  z-index: 1; /* Al fondo del todo */
 }
 
-.mapImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Asegura que la imagen cubra todo sin deformarse */
-  display: block;
+
+/* --- ADAPTACIONES HU05 (SIN BORRAR NADA) --- */
+
+.searchOverlay {
+  position: absolute;
+  top: 80px; /* Debajo de tu Navbar */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  pointer-events: auto;
+}
+
+.sidebarOverlay {
+  position: absolute;
+  top: 80px;
+  left: 2rem;
+  z-index: 70;
+  pointer-events: auto;
+}
+
+.cardOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 80;
+  pointer-events: auto;
 }
