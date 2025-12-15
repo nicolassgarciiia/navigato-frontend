@@ -1,12 +1,15 @@
 import { useState } from "react";
 import styles from "./CoordinateSearch.module.css";
+import type { RefObject } from "react";
 
 interface CoordinateSearchProps {
   onSearch: (lat: number, lng: number) => void;
   onAdd: (lat: number, lng: number) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-export default function CoordinateSearch({ onSearch, onAdd }: CoordinateSearchProps) {
+
+export default function CoordinateSearch({ onSearch, onAdd, inputRef }: CoordinateSearchProps) {
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null); // Nuevo estado para el error
 
@@ -51,6 +54,7 @@ export default function CoordinateSearch({ onSearch, onAdd }: CoordinateSearchPr
     <div className={styles.wrapper}> {/* Contenedor para posicionar el error */}
       <div className={styles.searchBar}>
         <input
+          ref={inputRef}
           type="text"
           className={`${styles.input} ${error ? styles.inputError : ""}`}
           placeholder="Lat, Lng (ej: 39.46, -0.37)"

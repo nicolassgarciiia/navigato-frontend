@@ -6,19 +6,17 @@ import "leaflet/dist/leaflet.css";
 
 interface MapaPrincipalProps {
   center?: [number, number] | null;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
-export default function MapaPrincipal({ center }: MapaPrincipalProps) {
-  // Usamos una referencia para guardar el objeto del mapa y usarlo luego
+export default function MapaPrincipal({ center, onMapClick }: MapaPrincipalProps) {
   const mapRef = useRef<L.Map | null>(null);
 
+  // 1) Crear mapa SOLO una vez
   useEffect(() => {
     const mapDiv = document.getElementById("map");
+    if (!mapDiv || mapRef.current) return;
 
-    // Evitar crear el mapa más de una vez
-    if (!mapDiv || mapDiv.children.length > 0 || mapRef.current) return;
-
-    // Guardamos la instancia en mapRef.current
     const map = L.map("map").setView([39.986, -0.05], 13);
     mapRef.current = map;
 
@@ -31,13 +29,27 @@ export default function MapaPrincipal({ center }: MapaPrincipalProps) {
     }, 0);
   }, []);
 
-  // ✅ NUEVO: Este efecto detecta cuando 'center' cambia y mueve el mapa
+  // 2) Enganchar / desenganchar click cuando cambie onMapClick
   useEffect(() => {
-    if (mapRef.current && center) {
-      mapRef.current.setView(center, 15, {
-        animate: true, // Movimiento suave
-        duration: 1.0  // Duración del desplazamiento
-      });
+    const map = mapRef.current;
+    if (!map) return;
+
+    const handler = (e: L.LeafletMouseEvent) => {
+      onMapClick?.(e.latlng.lat, e.latlng.lng);
+    };
+
+    map.on("click", handler);
+
+    return () => {
+      map.off("click", handler);
+    };
+  }, [onMapClick]);
+
+  // 3) Mover mapa cuando cambie center
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && center) {
+      map.setView(center, 15, { animate: true, duration: 1.0 });
     }
   }, [center]);
 
@@ -47,7 +59,7 @@ export default function MapaPrincipal({ center }: MapaPrincipalProps) {
       style={{
         width: "100%",
         height: "100%",
-        zIndex: 1 // Aseguramos que esté al fondo
+        zIndex: 1,
       }}
     />
   );

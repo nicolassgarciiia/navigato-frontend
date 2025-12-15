@@ -197,3 +197,11 @@ export async function getToponimo(lat: number, lng: number) {
     method: "GET",
   });
 }
+export async function getCoordinatesFromToponym(toponimo: string) {
+  return request(
+    `/geocoding/search?q=${encodeURIComponent(toponimo)}`,
+    { method: "GET" }
+  );
+}
+
+

@@ -29,15 +29,14 @@ export default function Sidebar({ isOpen, onClose, onAddLocationClick }: Sidebar
       {/* Submenú Flotante */}
       {activeTab === 'lugares' && (
   <div className={styles.subMenu}>
-    <button 
-      className={styles.menuItem} 
-      onClick={() => {
-        onAddLocationClick(); 
-        onClose();            
-      }}
-    >
-      Dar de alta lugar
-    </button>
+   <button 
+  className={styles.menuItem} 
+  onClick={() => {
+    onAddLocationClick();
+  }}
+>
+  Dar de alta lugar
+</button>
     <button className={styles.menuItem}>Lista de lugares</button>
   </div>
 )}
