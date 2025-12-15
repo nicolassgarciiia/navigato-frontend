@@ -93,3 +93,8 @@
   z-index: 80;
   pointer-events: auto;
 }
+.highlight {
+  box-shadow: 0 0 0 3px #2563eb;
+  border-radius: 999px;
+  transition: box-shadow 0.3s ease;
+}
