@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-
+import POIList from "@/components/POIList";
 import authFacade from "@/facade/authFacade";
 import { poiFacade } from "@/facade/poiFacade";
 import { getCoordinatesFromToponym } from "@/lib/api";
@@ -54,7 +54,7 @@ export default function HomePage() {
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-
+  const [showPOIList, setShowPOIList] = useState(false);
   const [searchMode, setSearchMode] = useState<"coords" | "toponym">("coords");
   const coordInputRef = useRef<HTMLInputElement>(null);
   const toponymInputRef = useRef<HTMLInputElement>(null);
@@ -195,8 +195,29 @@ export default function HomePage() {
         <Sidebar
   isOpen={isSidebarOpen}
   onClose={() => setIsSidebarOpen(false)}
-  onAddLocationClick={handleTriggerAddPOI}
+
+  onAddLocationClick={() => {
+    setIsSidebarOpen(false);
+    setShowPOIList(false);
+
+    setSearchMode("coords");
+    setTimeout(() => {
+      coordInputRef.current?.focus();
+    }, 100);
+  }}
+
+  onListLocationsClick={() => {
+    setIsSidebarOpen(false);
+    setShowPOIList(false);
+
+    setTimeout(() => {
+      setShowPOIList(true);
+    }, 0);
+  }}
 />
+
+
+
 
       </div>
 
@@ -209,18 +230,36 @@ export default function HomePage() {
           zIndex: 1500,
         }}
       >
-        <div style={{ marginBottom: 8, textAlign: "center" }}>
-          <button onClick={() => setSearchMode("coords")} disabled={searchMode === "coords"}>
-            Coordenadas
-          </button>
-          <button
-            onClick={() => setSearchMode("toponym")}
-            disabled={searchMode === "toponym"}
-            style={{ marginLeft: 8 }}
-          >
-            Lugar
-          </button>
-        </div>
+        <div className={styles.searchSelector}>
+  <div className={styles.searchTitle}>
+    ¿Cómo quieres buscar el lugar?
+  </div>
+
+  <div className={styles.searchSubtitle}>
+    Elige una opción para empezar
+  </div>
+
+  <div className={styles.searchButtons}>
+    <button
+      className={`${styles.searchBtn} ${
+        searchMode === "coords" ? styles.active : ""
+      }`}
+      onClick={() => setSearchMode("coords")}
+    >
+      📍 Por coordenadas
+    </button>
+
+    <button
+      className={`${styles.searchBtn} ${
+        searchMode === "toponym" ? styles.active : ""
+      }`}
+      onClick={() => setSearchMode("toponym")}
+    >
+      🏙️ Por topónimo
+    </button>
+  </div>
+</div>
+
 
         {searchMode === "coords" ? (
           <CoordinateSearch
@@ -268,6 +307,29 @@ export default function HomePage() {
     }}
   />
 </div>
+{showPOIList && (
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+  >
+    <POIList
+      onClose={() => setShowPOIList(false)}
+      onSelectPOI={(poi) => {
+        setShowPOIList(false);
+        setMapCenter([poi.latitud, poi.longitud]);
+      }}
+    />
+  </div>
+)}
+
+
+
+
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </main>

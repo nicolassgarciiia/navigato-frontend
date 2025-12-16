@@ -203,5 +203,15 @@ export async function getCoordinatesFromToponym(toponimo: string) {
     { method: "GET" }
   );
 }
+export async function fetchPOIs(userEmail: string) {
+  return request(`/pois?correo=${encodeURIComponent(userEmail)}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+}
+
+
+
+
 
 
