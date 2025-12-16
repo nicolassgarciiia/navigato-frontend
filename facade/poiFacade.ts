@@ -1,4 +1,4 @@
-import { createPOI, getToponimo, fetchPOIs } from "../lib/api";
+import { createPOI, getToponimo, fetchPOIs, deletePOI } from "../lib/api";
 
 export const poiFacade = {
   async fetchLocationDetails(lat: number, lng: number) {
@@ -79,5 +79,29 @@ async listPOIs(userEmail: string) {
     error: result?.error || "Error al cargar lugares",
     status: result?.status,
   };
-}
+},
+  // =====================================================
+  // HU08 – Eliminar lugar de interés
+  // =====================================================
+  async deletePOI(userEmail: string, poiId: string) {
+    if (!userEmail || !poiId) {
+      return {
+        ok: false,
+        error: "Datos inválidos",
+      };
+    }
+
+    const result = await deletePOI(userEmail, poiId);
+
+    if (result.ok) {
+      return { ok: true };
+    }
+
+    return {
+      ok: false,
+      error: result.error,
+      code: result.code,
+      status: result.status,
+    };
+  },
 };
