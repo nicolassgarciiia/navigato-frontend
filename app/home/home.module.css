@@ -1,4 +1,3 @@
-/* --- TUS ESTILOS (TAL CUAL) --- */
 .main {
   position: relative;
   width: 100%;
@@ -66,11 +65,11 @@
 }
 
 
-/* --- ADAPTACIONES HU05 (SIN BORRAR NADA) --- */
+/* --- ADAPTACIONES HU05 --- */
 
 .searchOverlay {
   position: absolute;
-  top: 80px; /* Debajo de tu Navbar */
+  top: 80px; 
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
@@ -97,4 +96,40 @@
   box-shadow: 0 0 0 3px #2563eb;
   border-radius: 999px;
   transition: box-shadow 0.3s ease;
+}
+.searchSelector {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.searchTitle {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.searchSubtitle {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.searchButtons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.searchBtn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.searchBtn.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
 }

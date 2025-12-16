@@ -1,4 +1,4 @@
-import { createPOI, getToponimo } from "../lib/api";
+import { createPOI, getToponimo, fetchPOIs } from "../lib/api";
 
 export const poiFacade = {
   async fetchLocationDetails(lat: number, lng: number) {
@@ -52,4 +52,32 @@ export const poiFacade = {
       status: result.status,
     };
   },
+  // =====================================================
+// HU07 – Listar lugares de interés 
+// =====================================================
+async listPOIs(userEmail: string) {
+  if (!userEmail) {
+    return { ok: false, error: "Usuario no autenticado" };
+  }
+
+  const result: any = await fetchPOIs(userEmail);
+
+  // request() devuelve arrays como objetos indexados
+  if (result?.ok) {
+    const pois = Object.keys(result)
+      .filter((key) => !isNaN(Number(key)))
+      .map((key) => result[key]);
+
+    return {
+      ok: true,
+      data: pois,
+    };
+  }
+
+  return {
+    ok: false,
+    error: result?.error || "Error al cargar lugares",
+    status: result?.status,
+  };
+}
 };

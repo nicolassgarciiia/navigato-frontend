@@ -4,10 +4,16 @@ import styles from "./Sidebar.module.css";
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddLocationClick: () => void; 
+  onAddLocationClick: () => void;
+  onListLocationsClick: () => void;
 }
 
-export default function Sidebar({ isOpen, onClose, onAddLocationClick }: SidebarProps) {
+export default function Sidebar({
+  isOpen,
+  onClose,
+  onAddLocationClick,
+  onListLocationsClick,
+}: SidebarProps) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -16,30 +22,43 @@ export default function Sidebar({ isOpen, onClose, onAddLocationClick }: Sidebar
     <div className={styles.container}>
       {/* Menú Principal */}
       <div className={styles.mainMenu}>
-        <button 
-          className={`${styles.menuItem} ${activeTab === 'lugares' ? styles.active : ''}`}
-          onClick={() => setActiveTab(activeTab === 'lugares' ? null : 'lugares')}
+        <button
+          className={`${styles.menuItem} ${
+            activeTab === "lugares" ? styles.active : ""
+          }`}
+          onClick={() =>
+            setActiveTab(activeTab === "lugares" ? null : "lugares")
+          }
         >
           Gestión de lugares
         </button>
+
         <button className={styles.menuItem}>Gestión de vehículos</button>
         <button className={styles.menuItem}>Gestión de rutas</button>
       </div>
 
       {/* Submenú Flotante */}
-      {activeTab === 'lugares' && (
-  <div className={styles.subMenu}>
-   <button 
-  className={styles.menuItem} 
-  onClick={() => {
-    onAddLocationClick();
-  }}
+      {activeTab === "lugares" && (
+        <div className={styles.subMenu}>
+          <button
+            className={styles.menuItem}
+            onClick={() => {
+              onAddLocationClick();
+              onClose();
+            }}
+          >
+            Dar de alta lugar
+          </button>
+
+          <button
+  className={styles.menuItem}
+  onClick={onListLocationsClick}
 >
-  Dar de alta lugar
+  Lista de lugares
 </button>
-    <button className={styles.menuItem}>Lista de lugares</button>
-  </div>
-)}
+
+        </div>
+      )}
     </div>
   );
 }
