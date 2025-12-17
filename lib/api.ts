@@ -209,6 +209,17 @@ export async function fetchPOIs(userEmail: string) {
     cache: "no-store",
   });
 }
+// ======================================================
+// HU08 – Delete POI
+// ======================================================
+export async function deletePOI(userEmail: string, poiId: string) {
+  return request(
+    `/pois/${encodeURIComponent(poiId)}?correo=${encodeURIComponent(userEmail)}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
 
 
 
