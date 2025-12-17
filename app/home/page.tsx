@@ -102,12 +102,12 @@ export default function HomePage() {
     const result = await poiFacade.fetchLocationDetails(lat, lng);
 
     if (result.ok) {
-  setSelectedPOI({
+      setSelectedPOI({
     lat,
     lng,
     toponimo: nombreInicial || result.data.toponimo,
-  });
-} else {
+    });
+  } else {
       setToast({
         message: `Error al obtener la dirección: ${result.error}`,
         type: "error",
