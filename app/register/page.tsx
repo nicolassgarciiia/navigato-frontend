@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import authFacade from "@/facade/authFacade";
 import styles from "./register.module.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 
 export default function RegisterPage() {
   const router = useRouter();

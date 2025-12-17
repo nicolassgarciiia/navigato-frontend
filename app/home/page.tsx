@@ -3,21 +3,21 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import POIList from "@/components/POIList";
+import POIList from "@/components/poi/POIList";
 import authFacade from "@/facade/authFacade";
 import { poiFacade } from "@/facade/poiFacade";
 import { getCoordinatesFromToponym } from "@/lib/api";
 
 import styles from "./home.module.css";
-import HomeNavbar from "@/components/HomeNavbar";
-import CoordinateSearch from "@/components/CoordinateSearch";
-import ToponymSearch from "@/components/ToponymSearch";
-import POICard from "@/components/POICard";
-import Sidebar from "@/components/Sidebar";
-import Toast from "@/components/Toast";
+import HomeNavbar from "@/components/layout/HomeNavbar";
+import CoordinateSearch from "@/components/search/CoordinateSearch";
+import ToponymSearch from "@/components/search/ToponymSearch";
+import POICard from "@/components/poi/POICard";
+import Sidebar from "@/components/layout/Sidebar";
+import Toast from "@/components/ui/Toast";
 
 const MapaPrincipal = dynamic(
-  () => import("@/components/MapaPrincipal"),
+  () => import("@/components/map/MapaPrincipal"),
   { ssr: false }
 );
 
@@ -102,12 +102,12 @@ export default function HomePage() {
     const result = await poiFacade.fetchLocationDetails(lat, lng);
 
     if (result.ok) {
-      setSelectedPOI({
-        lat,
-        lng,
-        toponimo: nombreInicial || result.toponimo,
-      });
-    } else {
+  setSelectedPOI({
+    lat,
+    lng,
+    toponimo: nombreInicial || result.data.toponimo,
+  });
+} else {
       setToast({
         message: `Error al obtener la dirección: ${result.error}`,
         type: "error",
