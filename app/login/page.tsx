@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import authFacade from "@/facade/authFacade";
 import styles from "./login.module.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 
 // 1. Extraemos la lógica del formulario a un componente interno
 function LoginForm() {

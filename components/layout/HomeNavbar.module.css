@@ -1,0 +1,167 @@
+/* =====================================================
+   NAVBAR — DESKTOP ONLY
+   ===================================================== */
+.navbar {
+  position: sticky;
+  top: 0;
+
+  width: 100%;
+  height: 56px;
+
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+
+  z-index: 1000;
+}
+
+/* =====================================================
+   LEFT SECTION
+   ===================================================== */
+.leftSection {
+  display: flex;
+  align-items: center;
+}
+
+.hamburgerBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hamburgerBtn:hover {
+  background: #f2f4f7;
+}
+
+/* =====================================================
+   LOGO
+   ===================================================== */
+.logo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.logoImage {
+  height: 50px;
+  object-fit: contain;
+}
+
+/* =====================================================
+   USER SECTION
+   ===================================================== */
+.userSection {
+  position: relative;
+}
+
+.avatarButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.avatarButton:hover {
+  background: #f9fafb;
+}
+
+/* Usuario */
+.userInfoPreview {
+  display: block;
+}
+
+.userNamePreview {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Avatar */
+.avatarCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Chevron */
+.chevron {
+  width: 16px;
+  height: 16px;
+  color: #6b7280;
+}
+
+/* =====================================================
+   DROPDOWN
+   ===================================================== */
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+
+  width: 200px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+
+  padding: 6px 0;
+  z-index: 2000;
+}
+
+.menuItem {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #374151;
+
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background: #f3f4f6;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 6px 0;
+}
+
+.deleteItem {
+  color: #dc2626;
+}
+
+.deleteItem:hover {
+  background: #fef2f2;
+}
+
+.mapContainer {
+    height: calc(100vh - 48px);
+  }
+
