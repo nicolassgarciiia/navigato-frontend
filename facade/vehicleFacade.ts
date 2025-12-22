@@ -1,4 +1,4 @@
-import { createVehicle, fetchVehicles, deleteVehicle as deleteVehicleRequest } from "../lib/api";
+import { createVehicle, fetchVehicles, deleteVehicle as deleteVehicleRequest, updateVehicle as updateVehicleRequest} from "../lib/api";
 
 
 type FacadeResult<T> =
@@ -96,8 +96,35 @@ async deleteVehicle(
   }
 
   return { ok: true, data: true };
+}, 
+
+// =====================================================
+// HU12 – Actualizar vehículo
+// =====================================================
+async updateVehicle(
+  userEmail: string,
+  vehicleId: string,
+  consumo: number
+): Promise<FacadeResult<true>> {
+  if (!userEmail || !vehicleId) {
+    return { ok: false, error: "Datos inválidos" };
+  }
+
+  const result = await updateVehicleRequest(
+    userEmail,
+    vehicleId,
+    consumo
+  );
+
+  if (!result?.ok) {
+    return errorResult(result);
+  }
+
+  return { ok: true, data: true };
 }
 
 
+
 };
+
 

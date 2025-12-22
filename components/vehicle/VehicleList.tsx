@@ -17,7 +17,13 @@ interface Vehicle {
 
 type LoadStatus = "loading" | "error" | "ready";
 
-export default function VehicleList({ onClose }: { onClose: () => void }) {
+export default function VehicleList({
+  onClose,
+  onEditVehicle,
+}: {
+  onClose: () => void;
+  onEditVehicle: (vehicle: Vehicle) => void;
+}) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +35,9 @@ export default function VehicleList({ onClose }: { onClose: () => void }) {
     try {
       const user = authFacade.getUser();
       if (!user) return undefined;
-      return typeof user === "string" ? JSON.parse(user)?.correo : user.correo;
+      return typeof user === "string"
+        ? JSON.parse(user)?.correo
+        : user.correo;
     } catch {
       return undefined;
     }
@@ -60,40 +68,31 @@ export default function VehicleList({ onClose }: { onClose: () => void }) {
 
   const isDeleting = (id: string) => deletingIds.has(id);
 
-  const startDeleting = (id: string) =>
-    setDeletingIds((prev) => new Set(prev).add(id));
-
-  const stopDeleting = (id: string) =>
-    setDeletingIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-
   async function confirmDelete() {
     if (!vehicleToDelete || !correo) return;
 
     const { id } = vehicleToDelete;
     if (isDeleting(id)) return;
 
-    setError(null);
-    startDeleting(id);
+    setDeletingIds((prev) => new Set(prev).add(id));
 
     const deleted = vehicleToDelete;
     setVehicleToDelete(null);
 
-    // Optimistic UI
     setVehicles((prev) => prev.filter((v) => v.id !== id));
 
     const result = await vehicleFacade.deleteVehicle(correo, id);
 
     if (!result.ok) {
-      // rollback
       setVehicles((prev) => [deleted, ...prev]);
       setError(result.error || "Error al borrar el vehículo");
     }
 
-    stopDeleting(id);
+    setDeletingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   }
 
   const renderHeader = () => (
@@ -105,20 +104,13 @@ export default function VehicleList({ onClose }: { onClose: () => void }) {
     </div>
   );
 
-  if (status === "error") {
+  if (status !== "ready") {
     return (
       <div className={styles.wrapper}>
         {renderHeader()}
-        <div className={styles.empty}>{error}</div>
-      </div>
-    );
-  }
-
-  if (status === "loading") {
-    return (
-      <div className={styles.wrapper}>
-        {renderHeader()}
-        <div className={styles.empty}>Cargando vehículos…</div>
+        <div className={styles.empty}>
+          {status === "loading" ? "Cargando vehículos…" : error}
+        </div>
       </div>
     );
   }
@@ -153,16 +145,25 @@ export default function VehicleList({ onClose }: { onClose: () => void }) {
                   </span>
                 </div>
 
+                {/* EDITAR */}
+                <span
+                  className={styles.edit}
+                  title="Editar"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditVehicle(vehicle);
+                  }}
+                >
+                  ✏️
+                </span>
+
+                {/* BORRAR */}
                 <span
                   className={styles.trash}
                   title="Delete"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!deleting) setVehicleToDelete(vehicle);
-                  }}
-                  style={{
-                    cursor: deleting ? "not-allowed" : "pointer",
-                    opacity: deleting ? 0.35 : 1,
                   }}
                 >
                   🗑️
@@ -176,12 +177,10 @@ export default function VehicleList({ onClose }: { onClose: () => void }) {
       {vehicleToDelete && (
         <ConfirmDialog
           title="Delete vehicle"
-          message={`¿Estás seguro de que quieres borrar "${vehicleToDelete.nombre}"? Esta acción no se puede deshacer.`}
-          confirmText={isDeleting(vehicleToDelete.id) ? "Deleting..." : "Delete"}
+          message={`¿Estás seguro de que quieres borrar "${vehicleToDelete.nombre}"?`}
+          confirmText="Delete"
           cancelText="Cancel"
-          onCancel={() =>
-            !isDeleting(vehicleToDelete.id) && setVehicleToDelete(null)
-          }
+          onCancel={() => setVehicleToDelete(null)}
           onConfirm={confirmDelete}
         />
       )}
