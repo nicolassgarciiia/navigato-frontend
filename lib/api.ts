@@ -268,12 +268,15 @@ export async function deleteVehicle(userEmail: string, vehicleId: string) {
   );
 }
 // ======================================================
-// HU12 – Update Vehicle
+// HU12 – Update Vehicle (API)
 // ======================================================
 export async function updateVehicle(
   userEmail: string,
   vehicleId: string,
-  consumo: number
+  data: {
+    nombre?: string;
+    consumo?: number;
+  }
 ) {
   return request(
     `/vehicles/${encodeURIComponent(vehicleId)}?correo=${encodeURIComponent(
@@ -281,10 +284,15 @@ export async function updateVehicle(
     )}`,
     {
       method: "PUT",
-      body: JSON.stringify({ consumo }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     }
   );
 }
+
+
 
 
 
