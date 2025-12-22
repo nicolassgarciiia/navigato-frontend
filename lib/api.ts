@@ -267,6 +267,25 @@ export async function deleteVehicle(userEmail: string, vehicleId: string) {
     { method: "DELETE" }
   );
 }
+// ======================================================
+// HU12 – Update Vehicle
+// ======================================================
+export async function updateVehicle(
+  userEmail: string,
+  vehicleId: string,
+  consumo: number
+) {
+  return request(
+    `/vehicles/${encodeURIComponent(vehicleId)}?correo=${encodeURIComponent(
+      userEmail
+    )}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ consumo }),
+    }
+  );
+}
+
 
 
 

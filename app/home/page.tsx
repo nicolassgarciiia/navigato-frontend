@@ -74,6 +74,7 @@ export default function HomePage() {
   const coordInputRef = useRef<HTMLInputElement>(null);
   const toponymInputRef = useRef<HTMLInputElement>(null);
   const [showVehicleList, setShowVehicleList] = useState(false);
+  const [vehicleToEdit, setVehicleToEdit] = useState<any>(null);
 
   // ======================================================
   // SEGURIDAD
@@ -201,6 +202,30 @@ const handleAddByToponym = async (toponimo: string) => {
 
     setIsSaving(false);
   };
+  const handleUpdateVehicle = async (vehicleId: string, consumo: number) => {
+  const user = authFacade.getUser();
+  if (!user?.correo) return;
+
+  setIsSaving(true);
+  setBackendError(null);
+
+  const result = await vehicleFacade.updateVehicle(
+    user.correo,
+    vehicleId,
+    consumo
+  );
+
+  if (result.ok) {
+    setToast({ message: "Vehículo actualizado", type: "success" });
+    setVehicleToEdit(null);
+  } else {
+    setBackendError(result.error);
+    setToast({ message: result.error, type: "error" });
+  }
+
+  setIsSaving(false);
+};
+
 
   // ======================================================
   // RENDER
@@ -380,9 +405,41 @@ const handleAddByToponym = async (toponimo: string) => {
       zIndex: 3000,
     }}
       >
-      <VehicleList onClose={() => setShowVehicleList(false)} />
+      <VehicleList
+  onClose={() => setShowVehicleList(false)}
+  onEditVehicle={(vehicle) => {
+    setShowVehicleList(false);
+    setVehicleToEdit(vehicle); 
+  }}
+/>
     </div>
     )}
+
+    {vehicleToEdit && (
+      <div
+        style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+      >
+  <VehicleCard
+    vehicle={vehicleToEdit}
+    loading={isSaving}
+    error={backendError}
+    onSave={(nombre, matricula, tipo, consumo) =>
+      handleUpdateVehicle(vehicleToEdit.id, consumo)
+    }
+    onClose={() => {
+      setVehicleToEdit(null);
+      setBackendError(null);
+    }}
+  />
+  </div>
+)}
+
 
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
