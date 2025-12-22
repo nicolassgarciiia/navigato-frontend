@@ -20,6 +20,7 @@ import POICard from "@/components/poi/POICard";
 import POIList from "@/components/poi/POIList";
 import VehicleCard from "@/components/vehicle/VehicleCard";
 import Toast from "@/components/ui/Toast";
+import VehicleList from "@/components/vehicle/VehicleList";
 
 const MapaPrincipal = dynamic(
   () => import("@/components/map/MapaPrincipal"),
@@ -72,6 +73,7 @@ export default function HomePage() {
   const [searchMode, setSearchMode] = useState<"coords" | "toponym">("coords");
   const coordInputRef = useRef<HTMLInputElement>(null);
   const toponymInputRef = useRef<HTMLInputElement>(null);
+  const [showVehicleList, setShowVehicleList] = useState(false);
 
   // ======================================================
   // SEGURIDAD
@@ -230,6 +232,10 @@ const handleAddByToponym = async (toponimo: string) => {
             setBackendError(null);
             setShowVehicleCard(true);
           }}
+          onListVehiclesClick={() => {
+            setIsSidebarOpen(false);
+            setShowVehicleList(true);
+          }}  
         />
       </div>
 
@@ -363,6 +369,21 @@ const handleAddByToponym = async (toponimo: string) => {
           />
         </div>
       )}
+      {/* VEHICLE LIST */}
+      {showVehicleList && (
+      <div
+        style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+      >
+      <VehicleList onClose={() => setShowVehicleList(false)} />
+    </div>
+    )}
+
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </main>
