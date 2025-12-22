@@ -244,6 +244,19 @@ export async function createVehicle(
     }),
   });
 }
+// ======================================================
+// HU10 – VEHÍCULOS
+// ======================================================
+export async function fetchVehicles(userEmail: string) {
+  return request(
+    `/vehicles?correo=${encodeURIComponent(userEmail)}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    }
+  );
+}
+
 
 
 

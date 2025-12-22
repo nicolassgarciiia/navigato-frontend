@@ -4,9 +4,14 @@ import styles from "./Sidebar.module.css";
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+
+  // Lugares
   onAddLocationClick: () => void;
   onListLocationsClick: () => void;
+
+  // Vehículos
   onAddVehicleClick: () => void;
+  onListVehiclesClick: () => void;
 }
 
 export default function Sidebar({
@@ -15,6 +20,7 @@ export default function Sidebar({
   onAddLocationClick,
   onListLocationsClick,
   onAddVehicleClick,
+  onListVehiclesClick,
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<"lugares" | "vehiculos" | null>(
     null
@@ -89,6 +95,16 @@ export default function Sidebar({
             }}
           >
             Dar de alta vehículo
+          </button>
+
+          <button
+            className={styles.menuItem}
+            onClick={() => {
+              onListVehiclesClick();
+              onClose();
+            }}
+          >
+            Lista de vehículos
           </button>
         </div>
       )}
