@@ -3,18 +3,24 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import POIList from "@/components/poi/POIList";
+
 import authFacade from "@/facade/authFacade";
 import { poiFacade } from "@/facade/poiFacade";
+import { vehicleFacade } from "@/facade/vehicleFacade";
 import { getCoordinatesFromToponym } from "@/lib/api";
 
 import styles from "./home.module.css";
+
 import HomeNavbar from "@/components/layout/HomeNavbar";
+import Sidebar from "@/components/layout/Sidebar";
 import CoordinateSearch from "@/components/search/CoordinateSearch";
 import ToponymSearch from "@/components/search/ToponymSearch";
+
 import POICard from "@/components/poi/POICard";
-import Sidebar from "@/components/layout/Sidebar";
+import POIList from "@/components/poi/POIList";
+import VehicleCard from "@/components/vehicle/VehicleCard";
 import Toast from "@/components/ui/Toast";
+import VehicleList from "@/components/vehicle/VehicleList";
 
 const MapaPrincipal = dynamic(
   () => import("@/components/map/MapaPrincipal"),
@@ -30,6 +36,7 @@ const ERROR_HUMAN_MESSAGES: Record<string, string> = {
   InvalidCoordinatesFormatError: "Las coordenadas del lugar no son válidas.",
   AuthenticationRequiredError: "Tu sesión ha caducado. Vuelve a entrar.",
   DatabaseConnectionError: "Error crítico en la base de datos.",
+  InvalidVehicleConsumptionError: "El consumo no puede ser negativo.",
 };
 
 const getHumanErrorMessage = (technicalError: any): string => {
@@ -39,7 +46,7 @@ const getHumanErrorMessage = (technicalError: any): string => {
   );
   return key
     ? ERROR_HUMAN_MESSAGES[key]
-    : "No se ha podido guardar el lugar por un fallo en el servidor.";
+    : "No se ha podido guardar por un fallo en el servidor.";
 };
 
 export default function HomePage() {
@@ -49,15 +56,25 @@ export default function HomePage() {
   // ESTADOS
   // ======================================================
   const [selectedPOI, setSelectedPOI] = useState<any>(null);
+  const [showPOIList, setShowPOIList] = useState(false);
+  const [showVehicleCard, setShowVehicleCard] = useState(false);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-  const [showPOIList, setShowPOIList] = useState(false);
+
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
   const [searchMode, setSearchMode] = useState<"coords" | "toponym">("coords");
   const coordInputRef = useRef<HTMLInputElement>(null);
   const toponymInputRef = useRef<HTMLInputElement>(null);
+  const [showVehicleList, setShowVehicleList] = useState(false);
+  const [vehicleToEdit, setVehicleToEdit] = useState<any>(null);
 
   // ======================================================
   // SEGURIDAD
@@ -76,11 +93,7 @@ export default function HomePage() {
   const resolveToponym = async (toponimo: string) => {
     const result = await getCoordinatesFromToponym(toponimo);
 
-    if (
-      !result.ok ||
-      typeof result.lat !== "number" ||
-      typeof result.lng !== "number"
-    ) {
+    if (!result.ok || typeof result.lat !== "number") {
       setToast({ message: "No se pudo localizar el lugar", type: "error" });
       return null;
     }
@@ -89,7 +102,7 @@ export default function HomePage() {
   };
 
   // ======================================================
-  // FLUJO ÚNICO DE CREACIÓN DE POI
+  // POIs
   // ======================================================
   const openPOIFromCoords = async (
     lat: number,
@@ -103,11 +116,11 @@ export default function HomePage() {
 
     if (result.ok) {
       setSelectedPOI({
-    lat,
-    lng,
-    toponimo: nombreInicial || result.data.toponimo,
-    });
-  } else {
+        lat,
+        lng,
+        toponimo: nombreInicial || result.data.toponimo,
+      });
+    } else {
       setToast({
         message: `Error al obtener la dirección: ${result.error}`,
         type: "error",
@@ -115,52 +128,9 @@ export default function HomePage() {
     }
   };
 
-  // ======================================================
-  // HANDLERS DE ENTRADA
-  // ======================================================
-  // Coordenadas
-  const handleSearchByCoords = (lat: number, lng: number) => {
-    centerMap(lat, lng);
-  };
-
-  const handleTriggerAddPOI = () => {
-  setIsSidebarOpen(false);
-
-  setTimeout(() => {
-    if (searchMode === "coords") {
-      coordInputRef.current?.focus();
-    } else {
-      toponymInputRef.current?.focus();
-    }
-  }, 100);
-};
-
-
-  const handleAddByCoords = (lat: number, lng: number) => {
-    openPOIFromCoords(lat, lng);
-  };
-
-  // Topónimo
-  const handleSearchByToponym = async (toponimo: string) => {
-    const coords = await resolveToponym(toponimo);
-    if (coords) centerMap(coords.lat, coords.lng);
-  };
-
-  const handleAddByToponym = async (toponimo: string) => {
-    const coords = await resolveToponym(toponimo);
-    if (coords) openPOIFromCoords(coords.lat, coords.lng, toponimo);
-  };
-
-  // ======================================================
-  // GUARDAR POI
-  // ======================================================
-  const handleSaveFinal = async (nombre: string) => {
+  const handleSavePOI = async (nombre: string) => {
     const user = authFacade.getUser();
-
-    if (!user?.correo) {
-      setBackendError("No se ha podido recuperar tu sesión.");
-      return;
-    }
+    if (!user?.correo) return;
 
     setIsSaving(true);
     setBackendError(null);
@@ -183,6 +153,97 @@ export default function HomePage() {
 
     setIsSaving(false);
   };
+  const handleSearchByToponym = async (toponimo: string) => {
+  const coords = await resolveToponym(toponimo);
+  if (coords) {
+    centerMap(coords.lat, coords.lng);
+  }
+};
+
+const handleAddByToponym = async (toponimo: string) => {
+  const coords = await resolveToponym(toponimo);
+  if (coords) {
+    openPOIFromCoords(coords.lat, coords.lng, toponimo);
+  }
+};
+
+
+  // ======================================================
+  // VEHÍCULOS
+  // ======================================================
+  const handleSaveVehicle = async (
+  data:
+    | {
+        // =====================
+        // ALTA de vehículo
+        // =====================
+        nombre: string;
+        matricula: string;
+        tipo: "COMBUSTION" | "ELECTRICO";
+        consumo: number;
+      }
+    | {
+        // =====================
+        // EDICIÓN (HU12)
+        // =====================
+        nombre?: string;
+        consumo?: number;
+      }
+) => {
+  const user = authFacade.getUser();
+  if (!user?.correo) return;
+
+  setIsSaving(true);
+  setBackendError(null);
+
+  let result;
+
+  if ("matricula" in data && "tipo" in data) {
+    // ========= ALTA =========
+    result = await vehicleFacade.registerVehicle(
+      user.correo,
+      data.nombre,
+      data.matricula,
+      data.tipo,
+      data.consumo
+    );
+
+    if (result.ok) {
+      setToast({ message: "¡Vehículo añadido con éxito!", type: "success" });
+      setShowVehicleCard(false);
+    }
+  } else {
+    // ========= EDICIÓN (HU12) =========
+    if (!vehicleToEdit) {
+      setIsSaving(false);
+      return;
+    }
+
+    result = await vehicleFacade.updateVehicle(
+      user.correo,
+      vehicleToEdit.id,
+      data
+    );
+
+    if (result.ok) {
+      setToast({
+        message: "¡Vehículo actualizado con éxito!",
+        type: "success",
+      });
+      setVehicleToEdit(null);
+    }
+  }
+
+  if (!result.ok) {
+    const message = getHumanErrorMessage(result.error);
+    setBackendError(message);
+    setToast({ message, type: "error" });
+  }
+
+  setIsSaving(false);
+};
+
+
 
   // ======================================================
   // RENDER
@@ -191,36 +252,37 @@ export default function HomePage() {
     <main className={styles.main}>
       <HomeNavbar onToggleSidebar={() => setIsSidebarOpen((p) => !p)} />
 
+      {/* SIDEBAR */}
       <div style={{ position: "absolute", top: 85, left: "2.5%", zIndex: 2000 }}>
         <Sidebar
-  isOpen={isSidebarOpen}
-  onClose={() => setIsSidebarOpen(false)}
-
-  onAddLocationClick={() => {
-    setIsSidebarOpen(false);
-    setShowPOIList(false);
-
-    setSearchMode("coords");
-    setTimeout(() => {
-      coordInputRef.current?.focus();
-    }, 100);
-  }}
-
-  onListLocationsClick={() => {
-    setIsSidebarOpen(false);
-    setShowPOIList(false);
-
-    setTimeout(() => {
-      setShowPOIList(true);
-    }, 0);
-  }}
-/>
-
-
-
-
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          onAddLocationClick={() => {
+            setIsSidebarOpen(false);
+            setShowPOIList(false);
+            setSearchMode("coords");
+            setTimeout(() => coordInputRef.current?.focus(), 100);
+          }}
+          onListLocationsClick={() => {
+            setIsSidebarOpen(false);
+            setShowPOIList(false);
+            setTimeout(() => setShowPOIList(true), 0);
+          }}
+          onAddVehicleClick={() => {
+            setIsSidebarOpen(false);
+            setShowPOIList(false);
+            setSelectedPOI(null);
+            setBackendError(null);
+            setShowVehicleCard(true);
+          }}
+          onListVehiclesClick={() => {
+            setIsSidebarOpen(false);
+            setShowVehicleList(true);
+          }}  
+        />
       </div>
 
+      {/* ===== SELECTOR DE BÚSQUEDA (RESTAURADO) ===== */}
       <div
         style={{
           position: "absolute",
@@ -231,51 +293,59 @@ export default function HomePage() {
         }}
       >
         <div className={styles.searchSelector}>
-  <div className={styles.searchTitle}>
-    ¿Cómo quieres buscar el lugar?
-  </div>
+          <div className={styles.searchTitle}>
+            ¿Cómo quieres buscar el lugar?
+          </div>
 
-  <div className={styles.searchSubtitle}>
-    Elige una opción para empezar
-  </div>
+          <div className={styles.searchSubtitle}>
+            Elige una opción
+          </div>
 
-  <div className={styles.searchButtons}>
-    <button
-      className={`${styles.searchBtn} ${
-        searchMode === "coords" ? styles.active : ""
-      }`}
-      onClick={() => setSearchMode("coords")}
-    >
-      📍 Por coordenadas
-    </button>
+          <div className={styles.searchButtons}>
+            <button
+              className={`${styles.searchBtn} ${
+                searchMode === "coords" ? styles.active : ""
+              }`}
+              onClick={() => setSearchMode("coords")}
+            >
+              Por coordenadas
+            </button>
 
-    <button
-      className={`${styles.searchBtn} ${
-        searchMode === "toponym" ? styles.active : ""
-      }`}
-      onClick={() => setSearchMode("toponym")}
-    >
-      🏙️ Por topónimo
-    </button>
-  </div>
-</div>
-
+            <button
+              className={`${styles.searchBtn} ${
+                searchMode === "toponym" ? styles.active : ""
+              }`}
+              onClick={() => setSearchMode("toponym")}
+            >
+              Por topónimo
+            </button>
+          </div>
+        </div>
 
         {searchMode === "coords" ? (
           <CoordinateSearch
-            onSearch={handleSearchByCoords}
-            onAdd={handleAddByCoords}
+            onSearch={centerMap}
+            onAdd={openPOIFromCoords}
             inputRef={coordInputRef}
           />
         ) : (
           <ToponymSearch
-            onSearch={handleSearchByToponym}
+        onSearch={handleSearchByToponym}
             onAdd={handleAddByToponym}
             inputRef={toponymInputRef}
-          />
+          />  
         )}
       </div>
 
+      {/* MAPA */}
+      <div className={styles.mapContainer}>
+        <MapaPrincipal
+          center={mapCenter}
+          onMapClick={(lat, lng) => openPOIFromCoords(lat, lng)}
+        />
+      </div>
+
+      {/* POI CARD */}
       {selectedPOI && (
         <div
           style={{
@@ -290,7 +360,7 @@ export default function HomePage() {
             {...selectedPOI}
             error={backendError}
             loading={isSaving}
-            onSave={handleSaveFinal}
+            onSave={handleSavePOI}
             onClose={() => {
               setSelectedPOI(null);
               setBackendError(null);
@@ -299,35 +369,93 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className={styles.mapContainer}>
-  <MapaPrincipal
-    center={mapCenter}
-    onMapClick={(lat, lng) => {
-      openPOIFromCoords(lat, lng);
-    }}
-  />
-</div>
-{showPOIList && (
-  <div
-    style={{
+      {/* VEHICLE CARD */}
+      {showVehicleCard && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 3000,
+          }}
+        >
+          <VehicleCard
+            error={backendError}
+            loading={isSaving}
+            onSave={handleSaveVehicle}
+            onClose={() => {
+              setShowVehicleCard(false);
+              setBackendError(null);
+            }}
+          />
+        </div>
+      )}
+
+      {/* POI LIST */}
+      {showPOIList && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 3000,
+          }}
+        >
+          <POIList
+            onClose={() => setShowPOIList(false)}
+            onSelectPOI={(poi) => {
+              setShowPOIList(false);
+              setMapCenter([poi.latitud, poi.longitud]);
+            }}
+          />
+        </div>
+      )}
+      {/* VEHICLE LIST */}
+      {showVehicleList && (
+      <div
+        style={{
       position: "absolute",
       top: "50%",
       left: "50%",
       transform: "translate(-50%, -50%)",
       zIndex: 3000,
     }}
-  >
-    <POIList
-      onClose={() => setShowPOIList(false)}
-      onSelectPOI={(poi) => {
-        setShowPOIList(false);
-        setMapCenter([poi.latitud, poi.longitud]);
-      }}
-    />
+      >
+      <VehicleList
+  onClose={() => setShowVehicleList(false)}
+  onEditVehicle={(vehicle) => {
+    setShowVehicleList(false);
+    setVehicleToEdit(vehicle); 
+  }}
+/>
+    </div>
+    )}
+
+    {vehicleToEdit && (
+      <div
+        style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+      >
+  <VehicleCard
+    vehicle={vehicleToEdit}
+    loading={isSaving}
+    error={backendError}
+    onSave={handleSaveVehicle}
+    onClose={() => {
+      setVehicleToEdit(null);
+      setBackendError(null);
+    }}
+  />
+
   </div>
 )}
-
-
 
 
 

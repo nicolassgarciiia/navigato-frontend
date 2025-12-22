@@ -222,6 +222,79 @@ export async function deletePOI(userEmail: string, poiId: string) {
 }
 
 
+// ====================================================================
+// HU09 – VEHÍCULOS
+// ====================================================================
+
+export async function createVehicle(
+  userEmail: string,
+  nombre: string,
+  matricula: string,
+  tipo: "COMBUSTION" | "ELECTRICO",
+  consumo: number
+) {
+  return request("/vehicles", {
+    method: "POST",
+    body: JSON.stringify({
+      correo: userEmail,
+      nombre,
+      matricula,
+      tipo,
+      consumo: Number(consumo),
+    }),
+  });
+}
+// ======================================================
+// HU10 – VEHÍCULOS
+// ======================================================
+export async function fetchVehicles(userEmail: string) {
+  return request(
+    `/vehicles?correo=${encodeURIComponent(userEmail)}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    }
+  );
+}
+// ======================================================
+// HU11 – Delete Vehicle
+// ======================================================
+export async function deleteVehicle(userEmail: string, vehicleId: string) {
+  return request(
+    `/vehicles/${encodeURIComponent(vehicleId)}?correo=${encodeURIComponent(
+      userEmail
+    )}`,
+    { method: "DELETE" }
+  );
+}
+// ======================================================
+// HU12 – Update Vehicle (API)
+// ======================================================
+export async function updateVehicle(
+  userEmail: string,
+  vehicleId: string,
+  data: {
+    nombre?: string;
+    consumo?: number;
+  }
+) {
+  return request(
+    `/vehicles/${encodeURIComponent(vehicleId)}?correo=${encodeURIComponent(
+      userEmail
+    )}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+
+
+
 
 
 
