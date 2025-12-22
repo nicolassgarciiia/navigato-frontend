@@ -256,6 +256,17 @@ export async function fetchVehicles(userEmail: string) {
     }
   );
 }
+// ======================================================
+// HU11 – Delete Vehicle
+// ======================================================
+export async function deleteVehicle(userEmail: string, vehicleId: string) {
+  return request(
+    `/vehicles/${encodeURIComponent(vehicleId)}?correo=${encodeURIComponent(
+      userEmail
+    )}`,
+    { method: "DELETE" }
+  );
+}
 
 
 
