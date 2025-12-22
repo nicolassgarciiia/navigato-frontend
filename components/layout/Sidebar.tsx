@@ -6,6 +6,7 @@ interface SidebarProps {
   onClose: () => void;
   onAddLocationClick: () => void;
   onListLocationsClick: () => void;
+  onAddVehicleClick: () => void;
 }
 
 export default function Sidebar({
@@ -13,14 +14,17 @@ export default function Sidebar({
   onClose,
   onAddLocationClick,
   onListLocationsClick,
+  onAddVehicleClick,
 }: SidebarProps) {
-  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"lugares" | "vehiculos" | null>(
+    null
+  );
 
   if (!isOpen) return null;
 
   return (
     <div className={styles.container}>
-      {/* Menú Principal */}
+      {/* ================= MENÚ PRINCIPAL ================= */}
       <div className={styles.mainMenu}>
         <button
           className={`${styles.menuItem} ${
@@ -33,11 +37,23 @@ export default function Sidebar({
           Gestión de lugares
         </button>
 
-        <button className={styles.menuItem}>Gestión de vehículos</button>
-        <button className={styles.menuItem}>Gestión de rutas</button>
+        <button
+          className={`${styles.menuItem} ${
+            activeTab === "vehiculos" ? styles.active : ""
+          }`}
+          onClick={() =>
+            setActiveTab(activeTab === "vehiculos" ? null : "vehiculos")
+          }
+        >
+          Gestión de vehículos
+        </button>
+
+        <button className={styles.menuItem} disabled>
+          Gestión de rutas
+        </button>
       </div>
 
-      {/* Submenú Flotante */}
+      {/* ================= SUBMENÚ LUGARES ================= */}
       {activeTab === "lugares" && (
         <div className={styles.subMenu}>
           <button
@@ -51,12 +67,29 @@ export default function Sidebar({
           </button>
 
           <button
-  className={styles.menuItem}
-  onClick={onListLocationsClick}
->
-  Lista de lugares
-</button>
+            className={styles.menuItem}
+            onClick={() => {
+              onListLocationsClick();
+              onClose();
+            }}
+          >
+            Lista de lugares
+          </button>
+        </div>
+      )}
 
+      {/* ================= SUBMENÚ VEHÍCULOS ================= */}
+      {activeTab === "vehiculos" && (
+        <div className={styles.subMenu}>
+          <button
+            className={styles.menuItem}
+            onClick={() => {
+              onAddVehicleClick();
+              onClose();
+            }}
+          >
+            Dar de alta vehículo
+          </button>
         </div>
       )}
     </div>

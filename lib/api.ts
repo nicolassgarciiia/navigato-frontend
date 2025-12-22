@@ -222,6 +222,28 @@ export async function deletePOI(userEmail: string, poiId: string) {
 }
 
 
+// ====================================================================
+// HU09 – VEHÍCULOS
+// ====================================================================
+
+export async function createVehicle(
+  userEmail: string,
+  nombre: string,
+  matricula: string,
+  tipo: "COMBUSTION" | "ELECTRICO",
+  consumo: number
+) {
+  return request("/vehicles", {
+    method: "POST",
+    body: JSON.stringify({
+      correo: userEmail,
+      nombre,
+      matricula,
+      tipo,
+      consumo: Number(consumo),
+    }),
+  });
+}
 
 
 
