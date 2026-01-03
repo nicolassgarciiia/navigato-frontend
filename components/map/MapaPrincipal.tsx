@@ -31,19 +31,26 @@ export default function MapaPrincipal({ center, onMapClick }: MapaPrincipalProps
 
   // 2) Enganchar / desenganchar click cuando cambie onMapClick
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
+  const map = mapRef.current;
+  if (!map || !onMapClick) return;
 
-    const handler = (e: L.LeafletMouseEvent) => {
-      onMapClick?.(e.latlng.lat, e.latlng.lng);
-    };
+  let timeout: NodeJS.Timeout | null = null;
 
-    map.on("click", handler);
+  const handler = (e: L.LeafletMouseEvent) => {
+    if (timeout) clearTimeout(timeout);
 
-    return () => {
-      map.off("click", handler);
-    };
-  }, [onMapClick]);
+    timeout = setTimeout(() => {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    }, 250); // 👈 debounce real
+  };
+
+  map.on("click", handler);
+
+  return () => {
+    if (timeout) clearTimeout(timeout);
+    map.off("click", handler);
+  };
+}, [onMapClick]);
 
   // 3) Mover mapa cuando cambie center
   useEffect(() => {

@@ -286,6 +286,75 @@ export async function updateVehicle(
   );
 }
 
+// ====================================================================
+// HU13–HU19 – ROUTES
+// ====================================================================
+
+// HU13 – Calcular ruta
+export async function calculateRoute(
+  origen: {lat: number, lng: number},
+  destino: {lat: number, lng: number},
+  metodo: string
+) {
+  return request("/routes/calculate", {
+    method: "POST",
+    body: JSON.stringify({ origen, destino, metodo }),
+  });
+}
+
+// HU14 – Coste combustible
+export async function calculateRouteFuelCost(
+  vehicleId: string
+) {
+  return request("/routes/cost/fuel", {
+    method: "POST",
+    body: JSON.stringify({ vehicleId }),
+  });
+}
+
+// HU15 – Coste calorías
+export async function calculateRouteCalories() {
+  return request("/routes/cost/calories", {
+    method: "POST",
+  });
+}
+
+// HU16 – Calcular ruta por tipo/estrategia
+export async function calculateRouteByType(
+  origen: string,
+  destino: string,
+  tipo: string
+) {
+  return request("/routes/calculate/type", {
+    method: "POST",
+    body: JSON.stringify({ origen, destino, tipo }),
+  });
+}
+
+// HU17 – Guardar ruta
+export async function saveRoute(name: string) {
+  return request("/routes/save", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+// HU18 – Listar rutas guardadas
+export async function fetchSavedRoutes() {
+  return request("/routes", {
+    method: "GET",
+    cache: "no-store",
+  });
+}
+
+// HU19 – Eliminar ruta guardada
+export async function deleteSavedRoute(name: string) {
+  return request(`/routes/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+}
+
+
 
 
 

@@ -12,6 +12,9 @@ interface SidebarProps {
   // Vehículos
   onAddVehicleClick: () => void;
   onListVehiclesClick: () => void;
+
+  //Rutas 
+  onCalculateRouteClick: () => void;
 }
 
 export default function Sidebar({
@@ -21,8 +24,9 @@ export default function Sidebar({
   onListLocationsClick,
   onAddVehicleClick,
   onListVehiclesClick,
+  onCalculateRouteClick
 }: SidebarProps) {
-  const [activeTab, setActiveTab] = useState<"lugares" | "vehiculos" | null>(
+  const [activeTab, setActiveTab] = useState<"lugares" | "vehiculos" | "rutas" | null>(
     null
   );
 
@@ -54,7 +58,14 @@ export default function Sidebar({
           Gestión de vehículos
         </button>
 
-        <button className={styles.menuItem} disabled>
+        <button
+          className={`${styles.menuItem} ${
+            activeTab === "rutas" ? styles.active : ""
+          }`}
+          onClick={() =>
+            setActiveTab(activeTab === "rutas" ? null : "rutas")
+          }
+        >
           Gestión de rutas
         </button>
       </div>
@@ -108,6 +119,23 @@ export default function Sidebar({
           </button>
         </div>
       )}
+
+      {/* ================= SUBMENÚ VEHÍCULOS ================= */}
+
+        {activeTab === "rutas" && (
+    <div className={styles.subMenu}>
+      <button
+        className={styles.menuItem}
+        onClick={() => {
+          onCalculateRouteClick();
+          onClose();
+        }}
+      >
+        Calcular ruta
+      </button>
+    </div>
+  )}
+      
     </div>
   );
 }

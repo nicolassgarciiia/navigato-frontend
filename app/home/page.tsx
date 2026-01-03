@@ -21,6 +21,8 @@ import POIList from "@/components/poi/POIList";
 import VehicleCard from "@/components/vehicle/VehicleCard";
 import Toast from "@/components/ui/Toast";
 import VehicleList from "@/components/vehicle/VehicleList";
+import RouteCard from "../routes/RouteCard";
+import MapPointActionsCard from "@/components/map/MapPointActionsCard";
 
 const MapaPrincipal = dynamic(
   () => import("@/components/map/MapaPrincipal"),
@@ -58,12 +60,28 @@ export default function HomePage() {
   const [selectedPOI, setSelectedPOI] = useState<any>(null);
   const [showPOIList, setShowPOIList] = useState(false);
   const [showVehicleCard, setShowVehicleCard] = useState(false);
+  const [showRouteCard, setShowRouteCard] = useState(false);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
 
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  type MapMode = "POI" | "ROUTE_ORIGIN" | "ROUTE_DESTINATION" | "IDLE";
+
+  const [mapMode, setMapMode] = useState<MapMode>("IDLE");
+
+  const [selectedPoint, setSelectedPoint] = useState<{
+    lat: number;
+    lng: number;
+    toponimo?: string;
+  } | null>(null);
+
+  const [routeOrigin, setRouteOrigin] = useState<any>(null);
+  const [routeDestination, setRouteDestination] = useState<any>(null);
+
+
 
   const [toast, setToast] = useState<{
     message: string;
@@ -261,6 +279,13 @@ const handleAddByToponym = async (toponimo: string) => {
             setIsSidebarOpen(false);
             setShowVehicleList(true);
           }}  
+          onCalculateRouteClick={() => {
+            setShowPOIList(false);
+            setShowVehicleList(false);
+            setSelectedPOI(null);
+            setBackendError(null);
+            setShowRouteCard(true);
+          }}
         />
       </div>
 
@@ -320,12 +345,49 @@ const handleAddByToponym = async (toponimo: string) => {
       </div>
 
       {/* MAPA */}
-      <div className={styles.mapContainer}>
-        <MapaPrincipal
-          center={mapCenter}
-          onMapClick={(lat, lng) => openPOIFromCoords(lat, lng)}
-        />
-      </div>
+      <MapaPrincipal
+        center={mapCenter}
+        onMapClick={(lat, lng) =>
+          setSelectedPoint({ lat, lng })
+        }
+
+      />
+      {selectedPoint && (
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+  >
+    <MapPointActionsCard
+      lat={selectedPoint.lat}
+      lng={selectedPoint.lng}
+      toponimo={selectedPoint.toponimo}
+      onSavePOI={() => {
+        openPOIFromCoords(
+          selectedPoint.lat,
+          selectedPoint.lng,
+          selectedPoint.toponimo
+        );
+        setSelectedPoint(null);
+      }}
+      onSetOrigin={() => {
+        setRouteOrigin(selectedPoint);
+        setSelectedPoint(null);
+      }}
+      onSetDestination={() => {
+        setRouteDestination(selectedPoint);
+        setSelectedPoint(null);
+      }}
+      onClose={() => setSelectedPoint(null)}
+    />
+  </div>
+)}
+
+
 
       {/* POI CARD */}
       {selectedPOI && (
@@ -399,8 +461,8 @@ const handleAddByToponym = async (toponimo: string) => {
       <div
         style={{
       position: "absolute",
-      top: "50%",
       left: "50%",
+      top: "50%",
       transform: "translate(-50%, -50%)",
       zIndex: 3000,
     }}
@@ -413,6 +475,8 @@ const handleAddByToponym = async (toponimo: string) => {
   }}
 />
     </div>
+
+    
     )}
 
     {vehicleToEdit && (
@@ -439,6 +503,20 @@ const handleAddByToponym = async (toponimo: string) => {
   />
   </div>
 )}
+
+{routeOrigin && routeDestination && (
+  <RouteCard
+    origin={routeOrigin}
+    destination={routeDestination}
+    onClose={() => {
+      setRouteOrigin(null);
+      setRouteDestination(null);
+    }}
+  />
+)}
+
+
+
 
 
 
