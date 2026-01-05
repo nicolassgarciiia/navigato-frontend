@@ -1,16 +1,17 @@
 import {
-  calculateRoute,
-  saveRoute,
   fetchSavedRoutes,
   deleteSavedRoute,
   calculateRouteFuelCost,
   calculateRouteCalories,
   calculateRouteByType,
+  saveRoute,
+  toggleRouteFavorite,
 } from "../lib/api";
 
 import authFacade from "./authFacade";
 
 export const routeFacade = {
+  // HU13
   async calculate(
     origin: { lat: number; lng: number },
     destination: { lat: number; lng: number },
@@ -40,28 +41,50 @@ export const routeFacade = {
     return { ok: true, ...data };
   },
 
-  async save(name: string) {
-    return saveRoute(name);
+  
+  // HU14
+  async fuelCost(vehicleName: string) {
+    return calculateRouteFuelCost(vehicleName);
+  },
+  
+  // HU15
+  async calories() {
+    return calculateRouteCalories();
+  },
+  
+  // HU16 (CORREGIDA)
+  async byType(
+  origin: { lat: number; lng: number },
+  destination: { lat: number; lng: number },
+  metodo: string,
+  tipo: "rapida" | "corta" | "economica"
+) {
+  return calculateRouteByType(
+    origin,
+    destination,
+    metodo,
+    tipo
+  );
+},
+
+  
+  // HU17
+  async save(nombre: string) {
+    return saveRoute(nombre);
   },
 
+  // HU18
   async list() {
     return fetchSavedRoutes();
   },
 
+  // HU19
   async delete(name: string) {
     return deleteSavedRoute(name);
   },
-
-  async fuelCost(vehicleId: string) {
-    return calculateRouteFuelCost(vehicleId);
-  },
-
-  async calories() {
-    return calculateRouteCalories();
-  },
-
-  async byType(origen: string, destino: string, tipo: string) {
-    return calculateRouteByType(origen, destino, tipo);
+  // HU20
+  async toggleFavorite(name: string) {
+    return toggleRouteFavorite(name);
   },
 };
 

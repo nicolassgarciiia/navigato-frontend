@@ -1,3 +1,5 @@
+import authFacade from "@/facade/authFacade";
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -127,6 +129,11 @@ async function request(
     // --------------------------------------------------
     // Éxito con datos
     // --------------------------------------------------
+    
+    if(Array.isArray(data)) {
+      return {ok: true, data};
+    }
+    
     return { ok: true, ...data };
   } catch (error) {
     console.error("Error de red:", error);
@@ -303,12 +310,21 @@ export async function calculateRoute(
 }
 
 // HU14 – Coste combustible
-export async function calculateRouteFuelCost(
-  vehicleId: string
-) {
-  return request("/routes/cost/fuel", {
+export async function calculateRouteFuelCost(vehicle: string) {
+  const user = authFacade.getUser();
+
+  if (!user?.correo) {
+    return {
+      ok: false,
+      error: "Usuario no autenticado",
+    };
+  }
+
+  return request("/routes/cost/vehicle", {
     method: "POST",
-    body: JSON.stringify({ vehicleId }),
+    body: JSON.stringify({
+      vehiculo: vehicle,
+    }),
   });
 }
 
@@ -321,21 +337,28 @@ export async function calculateRouteCalories() {
 
 // HU16 – Calcular ruta por tipo/estrategia
 export async function calculateRouteByType(
-  origen: string,
-  destino: string,
-  tipo: string
+  origen: { lat: number; lng: number },
+  destino: { lat: number; lng: number },
+  metodo: string,
+  tipo: "rapida" | "corta" | "economica"
 ) {
-  return request("/routes/calculate/type", {
+  return request("/routes/calculate/by-type", {
     method: "POST",
-    body: JSON.stringify({ origen, destino, tipo }),
+    body: JSON.stringify({
+      origen,
+      destino,
+      metodo,
+      tipo,
+    }),
   });
 }
 
+
 // HU17 – Guardar ruta
-export async function saveRoute(name: string) {
+export async function saveRoute(nombre: string) {
   return request("/routes/save", {
     method: "POST",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ nombre }),
   });
 }
 
@@ -353,6 +376,14 @@ export async function deleteSavedRoute(name: string) {
     method: "DELETE",
   });
 }
+
+//HU20 - Marcar ruta favorita
+export async function toggleRouteFavorite(name: string) {
+  return request(`/routes/${encodeURIComponent(name)}/favorite`, {
+    method: "POST",
+  });
+}
+
 
 
 
