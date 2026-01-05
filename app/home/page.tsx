@@ -23,6 +23,7 @@ import Toast from "@/components/ui/Toast";
 import VehicleList from "@/components/vehicle/VehicleList";
 import RouteCard from "../routes/RouteCard";
 import MapPointActionsCard from "@/components/map/MapPointActionsCard";
+import SavedRoutesCard from "../routes/SavedRoutesCard";
 
 const MapaPrincipal = dynamic(
   () => import("@/components/map/MapaPrincipal"),
@@ -61,6 +62,7 @@ export default function HomePage() {
   const [showPOIList, setShowPOIList] = useState(false);
   const [showVehicleCard, setShowVehicleCard] = useState(false);
   const [showRouteCard, setShowRouteCard] = useState(false);
+  const [showSavedRoutes, setShowSavedRoutes] = useState(false);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
@@ -68,9 +70,8 @@ export default function HomePage() {
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  type MapMode = "POI" | "ROUTE_ORIGIN" | "ROUTE_DESTINATION" | "IDLE";
-
-  const [mapMode, setMapMode] = useState<MapMode>("IDLE");
+  const [routeLine, setRouteLine] =useState<[number, number][] | null>(null);
+  
 
   const [selectedPoint, setSelectedPoint] = useState<{
     lat: number;
@@ -246,6 +247,30 @@ const handleAddByToponym = async (toponimo: string) => {
 
 
   // ======================================================
+  // RUTAS
+  // ======================================================
+
+  const handleRouteCalculated = (route: any) => {
+    if (!Array.isArray(route.coordenadas)) return;
+
+    const latLngs: [number, number][] = route.coordenadas.map(
+      ([lng, lat]: [number, number]) => [lat, lng]
+    );
+
+    setRouteLine(null);
+
+    setTimeout(() => {
+      setRouteLine([...latLngs]);
+      setMapCenter(null); // limpia primero
+      setMapCenter(latLngs[0]);
+    }, 0);
+  };
+
+
+
+
+
+  // ======================================================
   // RENDER
   // ======================================================
   return (
@@ -286,6 +311,11 @@ const handleAddByToponym = async (toponimo: string) => {
             setBackendError(null);
             setShowRouteCard(true);
           }}
+
+          onListRoutesClick={() => {
+            setShowSavedRoutes(true);
+          }}
+
         />
       </div>
 
@@ -347,6 +377,7 @@ const handleAddByToponym = async (toponimo: string) => {
       {/* MAPA */}
       <MapaPrincipal
         center={mapCenter}
+        routeLine={routeLine}
         onMapClick={(lat, lng) =>
           setSelectedPoint({ lat, lng })
         }
@@ -504,10 +535,23 @@ const handleAddByToponym = async (toponimo: string) => {
   </div>
 )}
 
+{showSavedRoutes && (
+  <SavedRoutesCard
+    onClose={() => setShowSavedRoutes(false)}
+    onSelectRoute={(savedRoute) => {
+      handleRouteCalculated(savedRoute.route);
+      setShowSavedRoutes(false);
+    }}
+  />
+)}
+
+
+
 {routeOrigin && routeDestination && (
   <RouteCard
     origin={routeOrigin}
     destination={routeDestination}
+    onCalculated={handleRouteCalculated}
     onClose={() => {
       setRouteOrigin(null);
       setRouteDestination(null);

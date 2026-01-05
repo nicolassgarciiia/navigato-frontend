@@ -15,6 +15,7 @@ interface SidebarProps {
 
   //Rutas 
   onCalculateRouteClick: () => void;
+  onListRoutesClick: () => void;
 }
 
 export default function Sidebar({
@@ -24,7 +25,8 @@ export default function Sidebar({
   onListLocationsClick,
   onAddVehicleClick,
   onListVehiclesClick,
-  onCalculateRouteClick
+  onCalculateRouteClick,
+  onListRoutesClick
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<"lugares" | "vehiculos" | "rutas" | null>(
     null
@@ -120,7 +122,7 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* ================= SUBMENÚ VEHÍCULOS ================= */}
+      {/* ================= SUBMENÚ RUTAS ================= */}
 
         {activeTab === "rutas" && (
     <div className={styles.subMenu}>
@@ -132,6 +134,16 @@ export default function Sidebar({
         }}
       >
         Calcular ruta
+      </button>
+
+      <button
+      className={styles.menuItem}
+      onClick={() =>{
+        onListRoutesClick();
+        onClose();
+      }}
+      >
+        
       </button>
     </div>
   )}
