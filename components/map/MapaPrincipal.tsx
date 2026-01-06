@@ -6,13 +6,19 @@ import "leaflet/dist/leaflet.css";
 
 interface MapaPrincipalProps {
   center?: [number, number] | null;
+  routeLine?: [number, number][] | null;
   onMapClick?: (lat: number, lng: number) => void;
 }
 
-export default function MapaPrincipal({ center, onMapClick }: MapaPrincipalProps) {
+export default function MapaPrincipal({
+  center,
+  routeLine,
+  onMapClick,
+}: MapaPrincipalProps) {
   const mapRef = useRef<L.Map | null>(null);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
 
-  // 1) Crear mapa SOLO una vez
+  // 1) Crear mapa (una sola vez)
   useEffect(() => {
     const mapDiv = document.getElementById("map");
     if (!mapDiv || mapRef.current) return;
@@ -24,34 +30,64 @@ export default function MapaPrincipal({ center, onMapClick }: MapaPrincipalProps
       attribution: "&copy; OpenStreetMap contributors",
     }).addTo(map);
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 0);
+    setTimeout(() => map.invalidateSize(), 0);
   }, []);
 
-  // 2) Enganchar / desenganchar click cuando cambie onMapClick
+  // 2) Click en el mapa (con debounce)
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !onMapClick) return;
+
+    let timeout: NodeJS.Timeout | null = null;
 
     const handler = (e: L.LeafletMouseEvent) => {
-      onMapClick?.(e.latlng.lat, e.latlng.lng);
+      if (timeout) clearTimeout(timeout);
+
+      timeout = setTimeout(() => {
+        onMapClick(e.latlng.lat, e.latlng.lng);
+      }, 250);
     };
 
     map.on("click", handler);
 
     return () => {
+      if (timeout) clearTimeout(timeout);
       map.off("click", handler);
     };
   }, [onMapClick]);
 
-  // 3) Mover mapa cuando cambie center
+  // 3) Centrar mapa
+  useEffect(() => {
+  const map = mapRef.current;
+  if (!map || !center) return;
+
+  if (routeLayerRef.current) return;
+
+  map.setView(center, 15, { animate: true, duration: 1.0 });
+}, [center]);
+
+
+  // 4) DIBUJAR RUTA 
   useEffect(() => {
     const map = mapRef.current;
-    if (map && center) {
-      map.setView(center, 15, { animate: true, duration: 1.0 });
+    if (!map) return;
+
+    if (routeLayerRef.current) {
+      map.removeLayer(routeLayerRef.current);
+      routeLayerRef.current = null;
     }
-  }, [center]);
+
+    if (routeLine && routeLine.length > 1) {
+      const polyline = L.polyline(routeLine, {
+        color: "#2563eb",
+        weight: 5,
+        opacity: 0.9,
+      }).addTo(map);
+
+      routeLayerRef.current = polyline;
+      map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+    }
+  }, [routeLine]);
 
   return (
     <div

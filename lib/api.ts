@@ -1,3 +1,5 @@
+import authFacade from "@/facade/authFacade";
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -127,6 +129,11 @@ async function request(
     // --------------------------------------------------
     // Éxito con datos
     // --------------------------------------------------
+    
+    if(Array.isArray(data)) {
+      return {ok: true, data};
+    }
+    
     return { ok: true, ...data };
   } catch (error) {
     console.error("Error de red:", error);
@@ -227,35 +234,33 @@ export async function deletePOI(userEmail: string, poiId: string) {
 // ====================================================================
 
 export async function createVehicle(
-  userEmail: string,
   nombre: string,
   matricula: string,
   tipo: "COMBUSTION" | "ELECTRICO",
-  consumo: number
+  consumo: number,
+  favorito: boolean
 ) {
   return request("/vehicles", {
     method: "POST",
     body: JSON.stringify({
-      correo: userEmail,
       nombre,
       matricula,
       tipo,
-      consumo: Number(consumo),
+      consumo: consumo,
+      favorito, 
     }),
   });
 }
+
 // ======================================================
 // HU10 – VEHÍCULOS
 // ======================================================
-export async function fetchVehicles(userEmail: string) {
-  return request(
-    `/vehicles?correo=${encodeURIComponent(userEmail)}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
-  );
+export async function fetchVehicles() {
+  return request("/vehicles", {
+    method: "GET",
+  });
 }
+
 // ======================================================
 // HU11 – Delete Vehicle
 // ======================================================
@@ -291,6 +296,153 @@ export async function updateVehicle(
     }
   );
 }
+
+// ====================================================================
+// HU13–HU19 – ROUTES
+// ====================================================================
+
+// HU13 – Calcular ruta
+export async function calculateRoute(
+  origen: {lat: number, lng: number},
+  destino: {lat: number, lng: number},
+  metodo: string
+) {
+  return request("/routes/calculate", {
+    method: "POST",
+    body: JSON.stringify({ origen, destino, metodo }),
+  });
+}
+
+// HU14 – Coste combustible
+export async function calculateRouteFuelCost(vehicle: string) {
+  const user = authFacade.getUser();
+
+  if (!user?.correo) {
+    return {
+      ok: false,
+      error: "Usuario no autenticado",
+    };
+  }
+
+  return request("/routes/cost/vehicle", {
+    method: "POST",
+    body: JSON.stringify({
+      vehiculo: vehicle,
+    }),
+  });
+}
+
+// HU15 – Coste calorías
+export async function calculateRouteCalories() {
+  return request("/routes/cost/calories", {
+    method: "POST",
+  });
+}
+
+// HU16 – Calcular ruta por tipo/estrategia
+export async function calculateRouteByType(
+  origen: { lat: number; lng: number },
+  destino: { lat: number; lng: number },
+  metodo: string,
+  tipo: "rapida" | "corta" | "economica"
+) {
+  return request("/routes/calculate/by-type", {
+    method: "POST",
+    body: JSON.stringify({
+      origen,
+      destino,
+      metodo,
+      tipo,
+    }),
+  });
+}
+
+
+// HU17 – Guardar ruta
+export async function saveRoute(nombre: string) {
+  return request("/routes/save", {
+    method: "POST",
+    body: JSON.stringify({ nombre }),
+  });
+}
+
+// HU18 – Listar rutas guardadas
+export async function fetchSavedRoutes() {
+  return request("/routes", {
+    method: "GET",
+    cache: "no-store",
+  });
+}
+
+// HU19 – Eliminar ruta guardada
+export async function deleteSavedRoute(name: string) {
+  return request(`/routes/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+}
+
+//HU20 - Marcar ruta favorita
+export async function toggleRouteFavorite(name: string) {
+  return request(`/routes/${encodeURIComponent(name)}/favorite`, {
+    method: "POST",
+  });
+}
+
+// ======================================================
+// HU21 – Establecer vehículo por defecto
+// ======================================================
+export async function setDefaultVehicle(vehicleId: string) {
+  return request("/user-preferences/default-vehicle", {
+    method: "PUT",
+    cache: "no-store",
+    body: JSON.stringify({ vehicleId }),
+  });
+}
+
+// ======================================================
+// HU22 – Establecer tipo de ruta por defecto
+// ======================================================
+export async function setDefaultRouteType(routeType: string) {
+  return request("/user-preferences/default-route-type", {
+    method: "PUT",
+    cache: "no-store",
+    body: JSON.stringify({ routeType }),
+  });
+}
+
+
+// HU20 – Toggle vehículo favorito
+export async function toggleVehicleFavorite(vehicleId: string) {
+  return request(`/vehicles/${encodeURIComponent(vehicleId)}/favorite`, {
+    method: "POST",
+  });
+}
+
+// ======================================================
+// – Toggle POI favorito
+// ======================================================
+export async function togglePoiFavorite(poiId: string, correo: string) {
+  return request(`/pois/${encodeURIComponent(poiId)}/favorite`, {
+    method: "POST",
+    body: JSON.stringify({ correo }),
+  });
+}
+
+
+
+
+
+// ======================================================
+// Obtener preferencias del usuario
+// ======================================================
+export async function fetchUserPreferences() {
+  return request("/user-preferences", {
+    method: "GET",
+    cache: "no-store",
+  });
+}
+
+
 
 
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import styles from "./Sidebar.module.css";
 
@@ -12,6 +14,10 @@ interface SidebarProps {
   // Vehículos
   onAddVehicleClick: () => void;
   onListVehiclesClick: () => void;
+
+  // Rutas
+  onCalculateRouteClick: () => void;
+  onListRoutesClick: () => void;
 }
 
 export default function Sidebar({
@@ -21,12 +27,20 @@ export default function Sidebar({
   onListLocationsClick,
   onAddVehicleClick,
   onListVehiclesClick,
+  onCalculateRouteClick,
+  onListRoutesClick,
 }: SidebarProps) {
-  const [activeTab, setActiveTab] = useState<"lugares" | "vehiculos" | null>(
-    null
-  );
+  const [activeTab, setActiveTab] = useState<
+    "lugares" | "vehiculos" | "rutas" | null
+  >(null);
 
   if (!isOpen) return null;
+
+  function closeAll(action: () => void) {
+    action();
+    setActiveTab(null);
+    onClose();
+  }
 
   return (
     <div className={styles.container}>
@@ -40,7 +54,7 @@ export default function Sidebar({
             setActiveTab(activeTab === "lugares" ? null : "lugares")
           }
         >
-          Gestión de lugares
+          📍 Gestión de lugares
         </button>
 
         <button
@@ -51,11 +65,18 @@ export default function Sidebar({
             setActiveTab(activeTab === "vehiculos" ? null : "vehiculos")
           }
         >
-          Gestión de vehículos
+          🚗 Gestión de vehículos
         </button>
 
-        <button className={styles.menuItem} disabled>
-          Gestión de rutas
+        <button
+          className={`${styles.menuItem} ${
+            activeTab === "rutas" ? styles.active : ""
+          }`}
+          onClick={() =>
+            setActiveTab(activeTab === "rutas" ? null : "rutas")
+          }
+        >
+          🧭 Gestión de rutas
         </button>
       </div>
 
@@ -64,22 +85,16 @@ export default function Sidebar({
         <div className={styles.subMenu}>
           <button
             className={styles.menuItem}
-            onClick={() => {
-              onAddLocationClick();
-              onClose();
-            }}
+            onClick={() => closeAll(onAddLocationClick)}
           >
-            Dar de alta lugar
+            ➕ Dar de alta lugar
           </button>
 
           <button
             className={styles.menuItem}
-            onClick={() => {
-              onListLocationsClick();
-              onClose();
-            }}
+            onClick={() => closeAll(onListLocationsClick)}
           >
-            Lista de lugares
+            📋 Lista de lugares
           </button>
         </div>
       )}
@@ -89,22 +104,35 @@ export default function Sidebar({
         <div className={styles.subMenu}>
           <button
             className={styles.menuItem}
-            onClick={() => {
-              onAddVehicleClick();
-              onClose();
-            }}
+            onClick={() => closeAll(onAddVehicleClick)}
           >
-            Dar de alta vehículo
+            ➕ Dar de alta vehículo
           </button>
 
           <button
             className={styles.menuItem}
-            onClick={() => {
-              onListVehiclesClick();
-              onClose();
-            }}
+            onClick={() => closeAll(onListVehiclesClick)}
           >
-            Lista de vehículos
+            📋 Lista de vehículos
+          </button>
+        </div>
+      )}
+
+      {/* ================= SUBMENÚ RUTAS ================= */}
+      {activeTab === "rutas" && (
+        <div className={styles.subMenu}>
+          <button
+            className={styles.menuItem}
+            onClick={() => closeAll(onCalculateRouteClick)}
+          >
+            ➕ Calcular ruta
+          </button>
+
+          <button
+            className={styles.menuItem}
+            onClick={() => closeAll(onListRoutesClick)}
+          >
+            📋 Lista de rutas
           </button>
         </div>
       )}

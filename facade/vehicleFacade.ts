@@ -19,49 +19,36 @@ export const vehicleFacade = {
   // HU09 – Registrar vehículo
   // =====================================================
   async registerVehicle(
-    userEmail: string,
-    nombre: string,
-    matricula: string,
-    tipo: "COMBUSTION" | "ELECTRICO",
-    consumo: number
-  ): Promise<FacadeResult<any>> {
-    // Validación mínima (mismo estilo que POI)
-    if (!userEmail) {
-      return {
-        ok: false,
-        error: "Usuario no autenticado",
-      };
-    }
+  nombre: string,
+  matricula: string,
+  tipo: "COMBUSTION" | "ELECTRICO",
+  consumo: number,
+  favorito: boolean
+): Promise<FacadeResult<any>> {
+  const result = await createVehicle(
+    nombre,
+    matricula,
+    tipo,
+    consumo,
+    favorito
+  );
 
-    const result = await createVehicle(
-      userEmail,
-      nombre,
-      matricula,
-      tipo,
-      Number(consumo)
-    );
-
-    if (!result?.ok) {
-      return errorResult(result);
-    }
-
-    return {
-      ok: true,
-      data: result,
-    };
-  },
-  // =====================================================
-// HU10 – Listar vehículos
-// =====================================================
-async listVehicles(userEmail: string): Promise<FacadeResult<any[]>> {
-  if (!userEmail) {
-    return {
-      ok: false,
-      error: "Usuario no autenticado",
-    };
+  if (!result?.ok) {
+    return errorResult(result);
   }
 
-  const result = await fetchVehicles(userEmail);
+  return {
+    ok: true,
+    data: result.data,
+  };
+}
+,
+
+// =====================================================
+// HU10 – Listar vehículos
+// =====================================================
+async listVehicles(): Promise<FacadeResult<any[]>> {
+  const result = await fetchVehicles();
 
   if (!result?.ok) {
     return errorResult(result);
@@ -69,15 +56,14 @@ async listVehicles(userEmail: string): Promise<FacadeResult<any[]>> {
 
   const vehicles = Array.isArray(result.data)
     ? result.data
-    : Object.keys(result)
-        .filter((key) => !isNaN(Number(key)))
-        .map((key) => result[key]);
+    : [];
 
   return {
     ok: true,
     data: vehicles,
   };
 },
+
 // =====================================================
 // HU11 – Eliminar vehículo
 // =====================================================
@@ -124,9 +110,23 @@ async updateVehicle(
   }
 
   return { ok: true, data: true };
+},
+// =====================================================
+// HU20 – Marcar vehículo como favorito
+// =====================================================
+async toggleFavorite(vehicleId: string): Promise<FacadeResult<true>> {
+  if (!vehicleId) {
+    return { ok: false, error: "Datos inválidos" };
+  }
+
+  const result = await toggleVehicleFavorite(vehicleId);
+
+  if (!result?.ok) {
+    return errorResult(result);
+  }
+
+  return { ok: true, data: true };
 }
-
-
 
 
 

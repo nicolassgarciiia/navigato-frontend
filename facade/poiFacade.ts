@@ -3,6 +3,7 @@ import {
   getToponimo,
   fetchPOIs,
   deletePOI as deletePOIRequest,
+  togglePoiFavorite,
 } from "../lib/api";
 
 type FacadeResult<T> =
@@ -125,4 +126,11 @@ export const poiFacade = {
       data: true,
     };
   },
+
+
+async toggleFavoritePOI(poiId: string, correo: string) {
+  return togglePoiFavorite(poiId, correo);
+}, 
+
 };
+

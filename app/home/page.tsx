@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import RouteFromPOIsCard from "../routes/RouteFromPOIsCard";
+
 
 import authFacade from "@/facade/authFacade";
 import { poiFacade } from "@/facade/poiFacade";
@@ -21,6 +23,9 @@ import POIList from "@/components/poi/POIList";
 import VehicleCard from "@/components/vehicle/VehicleCard";
 import Toast from "@/components/ui/Toast";
 import VehicleList from "@/components/vehicle/VehicleList";
+import RouteCard from "../routes/RouteCard";
+import MapPointActionsCard from "@/components/map/MapPointActionsCard";
+import SavedRoutesCard from "../routes/SavedRoutesCard";
 
 const MapaPrincipal = dynamic(
   () => import("@/components/map/MapaPrincipal"),
@@ -58,12 +63,28 @@ export default function HomePage() {
   const [selectedPOI, setSelectedPOI] = useState<any>(null);
   const [showPOIList, setShowPOIList] = useState(false);
   const [showVehicleCard, setShowVehicleCard] = useState(false);
+  const [showRouteCard, setShowRouteCard] = useState(false);
+  const [showSavedRoutes, setShowSavedRoutes] = useState(false);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
 
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [routeLine, setRouteLine] =useState<[number, number][] | null>(null);
+  
+
+  const [selectedPoint, setSelectedPoint] = useState<{
+    lat: number;
+    lng: number;
+    toponimo?: string;
+  } | null>(null);
+
+  const [routeOrigin, setRouteOrigin] = useState<any>(null);
+  const [routeDestination, setRouteDestination] = useState<any>(null);
+
+
 
   const [toast, setToast] = useState<{
     message: string;
@@ -75,6 +96,8 @@ export default function HomePage() {
   const toponymInputRef = useRef<HTMLInputElement>(null);
   const [showVehicleList, setShowVehicleList] = useState(false);
   const [vehicleToEdit, setVehicleToEdit] = useState<any>(null);
+  const [showRouteFromPOIs, setShowRouteFromPOIs] = useState(false);
+
 
   // ======================================================
   // SEGURIDAD
@@ -246,6 +269,28 @@ const handleAddByToponym = async (toponimo: string) => {
 
 
   // ======================================================
+  // RUTAS
+  // ======================================================
+
+  const handleRouteCalculated = (route: any) => {
+    console.log("handleRouteCalculated received:", route);
+    console.log("coordenadas:", route.coordenadas?.length);
+
+    if (!Array.isArray(route.coordenadas)) return;
+
+    const latLngs: [number, number][] = route.coordenadas.map(
+      ([lng, lat]: [number, number]) => [lat, lng]
+    );
+
+    setRouteLine(latLngs);
+  };
+
+
+
+
+
+
+  // ======================================================
   // RENDER
   // ======================================================
   return (
@@ -253,34 +298,49 @@ const handleAddByToponym = async (toponimo: string) => {
       <HomeNavbar onToggleSidebar={() => setIsSidebarOpen((p) => !p)} />
 
       {/* SIDEBAR */}
-      <div style={{ position: "absolute", top: 85, left: "2.5%", zIndex: 2000 }}>
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          onAddLocationClick={() => {
-            setIsSidebarOpen(false);
-            setShowPOIList(false);
-            setSearchMode("coords");
-            setTimeout(() => coordInputRef.current?.focus(), 100);
-          }}
-          onListLocationsClick={() => {
-            setIsSidebarOpen(false);
-            setShowPOIList(false);
-            setTimeout(() => setShowPOIList(true), 0);
-          }}
-          onAddVehicleClick={() => {
-            setIsSidebarOpen(false);
-            setShowPOIList(false);
-            setSelectedPOI(null);
-            setBackendError(null);
-            setShowVehicleCard(true);
-          }}
-          onListVehiclesClick={() => {
-            setIsSidebarOpen(false);
-            setShowVehicleList(true);
-          }}  
-        />
-      </div>
+<div style={{ position: "absolute", top: 85, left: "2.5%", zIndex: 2000 }}>
+  <Sidebar
+    isOpen={isSidebarOpen}
+    onClose={() => setIsSidebarOpen(false)}
+    onAddLocationClick={() => {
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setSearchMode("coords");
+      setTimeout(() => coordInputRef.current?.focus(), 100);
+    }}
+    onListLocationsClick={() => {
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setTimeout(() => setShowPOIList(true), 0);
+    }}
+    onAddVehicleClick={() => {
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setSelectedPOI(null);
+      setBackendError(null);
+      setShowVehicleCard(true);
+    }}
+    onListVehiclesClick={() => {
+      setIsSidebarOpen(false);
+      setShowVehicleList(true);
+    }}
+    onCalculateRouteClick={() => {
+      // 🔥 NUEVO: selector de POIs
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setShowVehicleList(false);
+      setSelectedPOI(null);
+      setBackendError(null);
+
+      setShowRouteFromPOIs(true);
+    }}
+    onListRoutesClick={() => {
+      setShowSavedRoutes(true);
+      setIsSidebarOpen(false);
+    }}
+  />
+</div>
+
 
       {/* ===== SELECTOR DE BÚSQUEDA (RESTAURADO) ===== */}
       <div
@@ -338,12 +398,50 @@ const handleAddByToponym = async (toponimo: string) => {
       </div>
 
       {/* MAPA */}
-      <div className={styles.mapContainer}>
-        <MapaPrincipal
-          center={mapCenter}
-          onMapClick={(lat, lng) => openPOIFromCoords(lat, lng)}
-        />
-      </div>
+      <MapaPrincipal
+        center={mapCenter}
+        routeLine={routeLine}
+        onMapClick={(lat, lng) =>
+          setSelectedPoint({ lat, lng })
+        }
+
+      />
+      {selectedPoint && (
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+  >
+    <MapPointActionsCard
+      lat={selectedPoint.lat}
+      lng={selectedPoint.lng}
+      toponimo={selectedPoint.toponimo}
+      onSavePOI={() => {
+        openPOIFromCoords(
+          selectedPoint.lat,
+          selectedPoint.lng,
+          selectedPoint.toponimo
+        );
+        setSelectedPoint(null);
+      }}
+      onSetOrigin={() => {
+        setRouteOrigin(selectedPoint);
+        setSelectedPoint(null);
+      }}
+      onSetDestination={() => {
+        setRouteDestination(selectedPoint);
+        setSelectedPoint(null);
+      }}
+      onClose={() => setSelectedPoint(null)}
+    />
+  </div>
+)}
+
+
 
       {/* POI CARD */}
       {selectedPOI && (
@@ -417,8 +515,8 @@ const handleAddByToponym = async (toponimo: string) => {
       <div
         style={{
       position: "absolute",
-      top: "50%",
       left: "50%",
+      top: "50%",
       transform: "translate(-50%, -50%)",
       zIndex: 3000,
     }}
@@ -431,6 +529,8 @@ const handleAddByToponym = async (toponimo: string) => {
   }}
 />
     </div>
+
+    
     )}
 
     {vehicleToEdit && (
@@ -456,6 +556,55 @@ const handleAddByToponym = async (toponimo: string) => {
 
   </div>
 )}
+
+{showSavedRoutes && (
+  <SavedRoutesCard
+    onClose={() => setShowSavedRoutes(false)}
+    onSelectRoute={(savedRoute) => {
+      handleRouteCalculated(savedRoute.route);
+      setShowSavedRoutes(false);
+    }}
+  />
+)}
+
+
+
+{routeOrigin && routeDestination && (
+  <RouteCard
+    origin={routeOrigin}
+    destination={routeDestination}
+    onCalculated={handleRouteCalculated}
+    onClose={() => {
+      setRouteOrigin(null);
+      setRouteDestination(null);
+    }}
+  />
+)}
+{showRouteFromPOIs && (
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+  >
+    <RouteFromPOIsCard
+      onClose={() => setShowRouteFromPOIs(false)}
+      onConfirm={(origin, destination) => {
+        // Reutiliza tu flujo actual: RouteCard se abre con estos estados
+        setRouteOrigin(origin);
+        setRouteDestination(destination);
+        setShowRouteFromPOIs(false);
+      }}
+    />
+  </div>
+)}
+
+
+
+
 
 
 
