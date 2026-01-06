@@ -58,14 +58,6 @@ export default function MapaPrincipal({
 
   // 3) Centrar mapa
   useEffect(() => {
-<<<<<<< Updated upstream
-    const map = mapRef.current;
-    if (map && center) {
-      map.setView(center, 15, { animate: true });
-    }
-  }, [center]);
-
-=======
   const map = mapRef.current;
   if (!map || !center) return;
 
@@ -97,7 +89,6 @@ export default function MapaPrincipal({
     }
   }, [routeLine]);
 
->>>>>>> Stashed changes
   return (
     <div
       id="map"
