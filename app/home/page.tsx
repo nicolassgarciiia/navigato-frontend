@@ -228,6 +228,31 @@ const handleAddByToponym = async (toponimo: string) => {
 
 
   // ======================================================
+<<<<<<< Updated upstream
+=======
+  // RUTAS
+  // ======================================================
+
+  const handleRouteCalculated = (route: any) => {
+    console.log("handleRouteCalculated received:", route);
+    console.log("coordenadas:", route.coordenadas?.length);
+
+    if (!Array.isArray(route.coordenadas)) return;
+
+    const latLngs: [number, number][] = route.coordenadas.map(
+      ([lng, lat]: [number, number]) => [lat, lng]
+    );
+
+    setRouteLine(latLngs);
+  };
+
+
+
+
+
+
+  // ======================================================
+>>>>>>> Stashed changes
   // RENDER
   // ======================================================
   return (

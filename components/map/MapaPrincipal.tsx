@@ -47,12 +47,46 @@ export default function MapaPrincipal({ center, onMapClick }: MapaPrincipalProps
 
   // 3) Mover mapa cuando cambie center
   useEffect(() => {
+<<<<<<< Updated upstream
     const map = mapRef.current;
     if (map && center) {
       map.setView(center, 15, { animate: true, duration: 1.0 });
     }
   }, [center]);
 
+=======
+  const map = mapRef.current;
+  if (!map || !center) return;
+
+  if (routeLayerRef.current) return;
+
+  map.setView(center, 15, { animate: true, duration: 1.0 });
+}, [center]);
+
+
+  // 4) DIBUJAR RUTA 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (routeLayerRef.current) {
+      map.removeLayer(routeLayerRef.current);
+      routeLayerRef.current = null;
+    }
+
+    if (routeLine && routeLine.length > 1) {
+      const polyline = L.polyline(routeLine, {
+        color: "#2563eb",
+        weight: 5,
+        opacity: 0.9,
+      }).addTo(map);
+
+      routeLayerRef.current = polyline;
+      map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+    }
+  }, [routeLine]);
+
+>>>>>>> Stashed changes
   return (
     <div
       id="map"

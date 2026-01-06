@@ -35,6 +35,8 @@ export default function VehicleCard({
   const [matricula, setMatricula] = useState("");
   const [tipo, setTipo] = useState<"COMBUSTION" | "ELECTRICO">("COMBUSTION");
   const [consumo, setConsumo] = useState<number | "">("");
+  const [defaultVehicleId, setDefaultVehicleId] = useState<string | null>(null);
+
 
   // ===============================
   // Precargar datos en edición

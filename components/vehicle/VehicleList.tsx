@@ -5,6 +5,7 @@ import authFacade from "@/facade/authFacade";
 import { vehicleFacade } from "@/facade/vehicleFacade";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import styles from "./VehicleList.module.css";
+import userPreferencesFacade from "@/facade/userPreferencesFacade";
 
 interface Vehicle {
   id: string;
@@ -30,6 +31,11 @@ export default function VehicleList({
 
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [defaultVehicleId, setDefaultVehicleId] = useState<string | null>(null);
+  const [savingDefaultId, setSavingDefaultId] = useState<string | null>(null);
+
+
+
 
   const correo = useMemo(() => {
     try {
@@ -43,28 +49,37 @@ export default function VehicleList({
     }
   }, []);
 
-  useEffect(() => {
-    async function loadVehicles() {
-      if (!correo) {
-        setError("Usuario no autenticado");
-        setStatus("error");
-        return;
-      }
+useEffect(() => {
+  async function loadVehicles() {
+    setStatus("loading");
 
-      const result = await vehicleFacade.listVehicles(correo);
-
-      if (!result.ok) {
-        setError(result.error || "Error al cargar vehículos");
-        setStatus("error");
-        return;
-      }
-
-      setVehicles(result.data);
-      setStatus("ready");
+    const vehiclesResult = await vehicleFacade.listVehicles();
+    if (!vehiclesResult.ok) {
+      setError(vehiclesResult.error);
+      setStatus("error");
+      return;
     }
 
-    loadVehicles();
-  }, [correo]);
+    setVehicles(vehiclesResult.data);
+
+    // 🔑 cargar preferencias DESPUÉS
+    const prefsResult = await userPreferencesFacade.getPreferences();
+
+    if (prefsResult.ok) {
+      setDefaultVehicleId(prefsResult.data?.defaultVehicleId ?? null);
+    } else {
+      setDefaultVehicleId(null);
+    }
+
+    setStatus("ready");
+  }
+
+  loadVehicles();
+}, []);
+
+
+
+
 
   const isDeleting = (id: string) => deletingIds.has(id);
 
@@ -156,6 +171,41 @@ export default function VehicleList({
                 >
                   ✏️
                 </span>
+
+                {/* PREDETERMINADO */}
+                <span
+                  className={styles.star}
+                  title="Marcar como vehículo por defecto"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    console.log("CLICK STAR:", vehicle.id);
+                    // evitar clicks dobles / spam
+                    if (savingDefaultId) return;
+
+                    setSavingDefaultId(vehicle.id);
+                    setError(null);
+
+                    const res = await userPreferencesFacade.setDefaultVehicle(vehicle.id);
+                    console.log("SET DEFAULT RESULT:", res);
+                    setSavingDefaultId(null);
+
+                    if (!res.ok) {
+                      setError(res.error ?? "No se pudo guardar el vehículo por defecto");
+                      return;
+                    }
+
+                    setDefaultVehicleId(vehicle.id);
+                  }}
+                  style={{
+                    opacity: savingDefaultId === vehicle.id ? 0.6 : 1,
+                    pointerEvents: savingDefaultId === vehicle.id ? "none" : "auto",
+                    cursor: "pointer",
+                  }}
+                >
+                  {vehicle.id === defaultVehicleId ? "⭐" : "☆"}
+                </span>
+
+
 
                 {/* BORRAR */}
                 <span
