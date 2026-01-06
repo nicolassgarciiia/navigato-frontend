@@ -1,4 +1,4 @@
-import { createVehicle, fetchVehicles, deleteVehicle as deleteVehicleRequest, updateVehicle} from "../lib/api";
+import { createVehicle, fetchVehicles, deleteVehicle as deleteVehicleRequest, updateVehicle, toggleVehicleFavorite} from "../lib/api";
 
 
 type FacadeResult<T> =
@@ -131,5 +131,4 @@ async toggleFavorite(vehicleId: string): Promise<FacadeResult<true>> {
 
 
 };
-
 
