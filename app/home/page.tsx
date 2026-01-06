@@ -195,27 +195,69 @@ const handleAddByToponym = async (toponimo: string) => {
   // VEHÍCULOS
   // ======================================================
   const handleSaveVehicle = async (
-  nombre: string,
-  matricula: string,
-  tipo: "COMBUSTION" | "ELECTRICO",
-  consumo: number,
-  favorito: boolean
+  data:
+    | {
+        // =====================
+        // ALTA de vehículo
+        // =====================
+        nombre: string;
+        matricula: string;
+        tipo: "COMBUSTION" | "ELECTRICO";
+        consumo: number;
+      }
+    | {
+        // =====================
+        // EDICIÓN (HU12)
+        // =====================
+        nombre?: string;
+        consumo?: number;
+      }
 ) => {
+  const user = authFacade.getUser();
+  if (!user?.correo) return;
+
   setIsSaving(true);
   setBackendError(null);
 
-  const result = await vehicleFacade.registerVehicle(
-    nombre,
-    matricula,
-    tipo,
-    consumo,
-    favorito
-  );
+  let result;
 
-  if (result.ok) {
-    setToast({ message: "¡Vehículo añadido con éxito!", type: "success" });
-    setShowVehicleCard(false);
+  if ("matricula" in data && "tipo" in data) {
+    // ========= ALTA =========
+    result = await vehicleFacade.registerVehicle(
+      user.correo,
+      data.nombre,
+      data.matricula,
+      data.tipo,
+      data.consumo
+    );
+
+    if (result.ok) {
+      setToast({ message: "¡Vehículo añadido con éxito!", type: "success" });
+      setShowVehicleCard(false);
+    }
   } else {
+    // ========= EDICIÓN (HU12) =========
+    if (!vehicleToEdit) {
+      setIsSaving(false);
+      return;
+    }
+
+    result = await vehicleFacade.updateVehicle(
+      user.correo,
+      vehicleToEdit.id,
+      data
+    );
+
+    if (result.ok) {
+      setToast({
+        message: "¡Vehículo actualizado con éxito!",
+        type: "success",
+      });
+      setVehicleToEdit(null);
+    }
+  }
+
+  if (!result.ok) {
     const message = getHumanErrorMessage(result.error);
     setBackendError(message);
     setToast({ message, type: "error" });
@@ -224,29 +266,6 @@ const handleAddByToponym = async (toponimo: string) => {
   setIsSaving(false);
 };
 
-  const handleUpdateVehicle = async (vehicleId: string, consumo: number) => {
-  const user = authFacade.getUser();
-  if (!user?.correo) return;
-
-  setIsSaving(true);
-  setBackendError(null);
-
-  const result = await vehicleFacade.updateVehicle(
-    user.correo,
-    vehicleId,
-    consumo
-  );
-
-  if (result.ok) {
-    setToast({ message: "Vehículo actualizado", type: "success" });
-    setVehicleToEdit(null);
-  } else {
-    setBackendError(result.error);
-    setToast({ message: result.error, type: "error" });
-  }
-
-  setIsSaving(false);
-};
 
 
   // ======================================================
@@ -528,14 +547,13 @@ const handleAddByToponym = async (toponimo: string) => {
     vehicle={vehicleToEdit}
     loading={isSaving}
     error={backendError}
-    onSave={(nombre, matricula, tipo, consumo, favorito) =>
-      handleUpdateVehicle(vehicleToEdit.id, consumo)
-    }
+    onSave={handleSaveVehicle}
     onClose={() => {
       setVehicleToEdit(null);
       setBackendError(null);
     }}
   />
+
   </div>
 )}
 
