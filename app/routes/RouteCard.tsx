@@ -127,9 +127,6 @@ async function handleCalculateByType() {
     metodo,
     routeType
   );
-  console.log("FRONT → route by type response:", res);
-  console.log("FRONT → calling onCalculated with:", res);
-
 
   setLoading(false);
 

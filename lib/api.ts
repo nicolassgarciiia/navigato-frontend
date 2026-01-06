@@ -1,3 +1,5 @@
+import authFacade from "@/facade/authFacade";
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -127,6 +129,11 @@ async function request(
     // --------------------------------------------------
     // Éxito con datos
     // --------------------------------------------------
+    
+    if(Array.isArray(data)) {
+      return {ok: true, data};
+    }
+    
     return { ok: true, ...data };
   } catch (error) {
     console.error("Error de red:", error);
@@ -283,8 +290,6 @@ export async function updateVehicle(
   );
 }
 
-<<<<<<< Updated upstream
-=======
 // ====================================================================
 // HU13–HU19 – ROUTES
 // ====================================================================
@@ -412,7 +417,6 @@ export async function fetchUserPreferences() {
 
 
 
->>>>>>> Stashed changes
 
 
 
