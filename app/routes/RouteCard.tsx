@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import routeFacade from "@/facade/routeFacade";
 import { vehicleFacade } from "@/facade/vehicleFacade";
 import userPreferencesFacade from "@/facade/userPreferencesFacade";
@@ -25,46 +25,74 @@ export default function RouteCard({
   onCalculated,
   onClose,
 }: Props) {
+  // ==================================================
+  // ESTADO GENERAL
+  // ==================================================
   const [metodo, setMetodo] = useState("vehiculo");
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // ==================================================
+  // VEHÍCULOS + PREFS
+  // ==================================================
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
 
   const [routeType, setRouteType] = useState<RouteType>("economica");
+
+  // 🔑 CLAVE: ID → NOMBRE
+  const selectedVehicleName = useMemo(
+    () => vehicles.find(v => v.id === selectedVehicleId)?.nombre ?? "",
+    [vehicles, selectedVehicleId]
+  );
+
+  // ==================================================
+  // COSTES
+  // ==================================================
+  const [fuelCost, setFuelCost] = useState<number | null>(null);
+  const [fuelLiters, setFuelLiters] = useState<number | null>(null);
+  const [loadingCost, setLoadingCost] = useState(false);
+
+  const [calorieCost, setCalorieCost] = useState<number | null>(null);
+  const [loadingCalories, setLoadingCalories] = useState(false);
+
+  // ==================================================
+  // GUARDAR
+  // ==================================================
   const [routeName, setRouteName] = useState("");
   const [saving, setSaving] = useState(false);
 
   // ==================================================
-  // INIT: vehículos + preferencias
+  // INIT
   // ==================================================
   useEffect(() => {
     async function init() {
-      // 1️⃣ Cargar vehículos
       const vRes = await vehicleFacade.listVehicles();
       if (vRes.ok && Array.isArray(vRes.data)) {
         setVehicles(vRes.data);
       }
 
-      // 2️⃣ Cargar preferencias
       const pRes = await userPreferencesFacade.getPreferences();
       if (pRes.ok && pRes.data) {
         setRouteType(pRes.data.defaultRouteType ?? "economica");
         setSelectedVehicleId(pRes.data.defaultVehicleId ?? "");
       }
     }
-
     init();
   }, []);
 
   // ==================================================
-  // Calcular ruta
+  // CALCULAR RUTA
   // ==================================================
   async function handleCalculate() {
     setError(null);
     setLoading(true);
+
+    // reset costes
+    setFuelCost(null);
+    setFuelLiters(null);
+    setCalorieCost(null);
 
     const res = await routeFacade.byType(
       origin,
@@ -85,7 +113,56 @@ export default function RouteCard({
   }
 
   // ==================================================
-  // Guardar ruta
+  // COSTE VEHÍCULO (HU14)
+  // ==================================================
+  async function handleCalculateFuelCost() {
+    if (!selectedVehicleName) {
+      setError("Selecciona un vehículo");
+      return;
+    }
+
+    setLoadingCost(true);
+    setError(null);
+
+    const res = await routeFacade.fuelCost(selectedVehicleName);
+
+    setLoadingCost(false);
+
+    if (!res.ok) {
+      setError(res.error ?? "Error al calcular coste");
+      return;
+    }
+
+    setFuelCost(res.costeEconomico ?? null);
+    setFuelLiters(res.costeEnergetico?.valor ?? null);
+  }
+
+  // ==================================================
+  // COSTE CALÓRICO (HU15)
+  // ==================================================
+  async function handleCalculateCalories() {
+    setLoadingCalories(true);
+    setError(null);
+
+    const res = await routeFacade.calories();
+
+    setLoadingCalories(false);
+
+    if (!res.ok) {
+      setError(res.error ?? "Error al calcular coste calórico");
+      return;
+    }
+
+    const kcal = res.costeEnergetico?.valor;
+    if (typeof kcal === "number") {
+      setCalorieCost(kcal);
+    } else {
+      setError("Respuesta de coste calórico inválida");
+    }
+  }
+
+  // ==================================================
+  // GUARDAR RUTA
   // ==================================================
   async function handleSave() {
     if (!routeName.trim()) {
@@ -106,7 +183,7 @@ export default function RouteCard({
   }
 
   // ==================================================
-  // Helpers formato
+  // FORMATOS
   // ==================================================
   const km = result ? (result.distancia / 1000).toFixed(2) : null;
   const min = result ? Math.round(result.duracion / 60) : null;
@@ -148,7 +225,7 @@ export default function RouteCard({
         </select>
       )}
 
-      {/* TIPO DE RUTA */}
+      {/* TIPO RUTA */}
       <select
         className="border p-1 w-full"
         value={routeType}
@@ -163,17 +240,54 @@ export default function RouteCard({
       <button
         onClick={handleCalculate}
         disabled={loading}
-        className="bg-blue-600 text-white py-2 rounded"
+        className="bg-blue-600 text-white py-2 rounded w-full"
       >
         {loading ? "Calculando…" : "Calcular ruta"}
       </button>
 
       {/* RESULTADO */}
       {result && (
-        <div className="text-sm">
+        <div className="text-sm space-y-1">
           <p>📏 Distancia: {km} km</p>
           <p>⏱️ Duración: {min} min</p>
         </div>
+      )}
+
+      {/* COSTE VEHÍCULO */}
+      {result && metodo === "vehiculo" && (
+        <>
+          <button
+            onClick={handleCalculateFuelCost}
+            disabled={loadingCost || !selectedVehicleName}
+            className="bg-amber-600 text-white py-2 rounded w-full"
+          >
+            {loadingCost ? "Calculando coste…" : "Calcular coste"}
+          </button>
+
+          {fuelCost !== null && (
+            <>
+              <p>⛽ Coste estimado: <strong>{fuelCost} €</strong></p>
+              <p>🛢️ Consumo estimado: <strong>{fuelLiters} L</strong></p>
+            </>
+          )}
+        </>
+      )}
+
+      {/* COSTE CALÓRICO */}
+      {result && (metodo === "pie" || metodo === "bici") && (
+        <>
+          <button
+            onClick={handleCalculateCalories}
+            disabled={loadingCalories}
+            className="bg-orange-600 text-white py-2 rounded w-full"
+          >
+            {loadingCalories ? "Calculando…" : "Calcular coste calórico"}
+          </button>
+
+          {calorieCost !== null && (
+            <p>🔥 Coste calórico: <strong>{calorieCost} kcal</strong></p>
+          )}
+        </>
       )}
 
       {/* GUARDAR */}
