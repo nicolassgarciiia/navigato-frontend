@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import styles from "./VehicleCard.module.css";
 
@@ -7,15 +9,17 @@ interface Vehicle {
   matricula: string;
   tipo: "COMBUSTION" | "ELECTRICO";
   consumo: number;
+  favorito?: boolean;
 }
 
 interface VehicleCardProps {
-  vehicle?: Vehicle; // 👈 NUEVO (si viene, estamos editando)
+  vehicle?: Vehicle;
   onSave: (
     nombre: string,
     matricula: string,
     tipo: "COMBUSTION" | "ELECTRICO",
-    consumo: number
+    consumo: number,
+    favorito: boolean
   ) => void;
   onClose: () => void;
   error?: string | null;
@@ -35,8 +39,7 @@ export default function VehicleCard({
   const [matricula, setMatricula] = useState("");
   const [tipo, setTipo] = useState<"COMBUSTION" | "ELECTRICO">("COMBUSTION");
   const [consumo, setConsumo] = useState<number | "">("");
-  const [defaultVehicleId, setDefaultVehicleId] = useState<string | null>(null);
-
+  const [favorito, setFavorito] = useState(false);
 
   // ===============================
   // Precargar datos en edición
@@ -47,6 +50,7 @@ export default function VehicleCard({
       setMatricula(vehicle.matricula);
       setTipo(vehicle.tipo);
       setConsumo(vehicle.consumo);
+      setFavorito(!!vehicle.favorito);
     }
   }, [vehicle]);
 
@@ -58,20 +62,18 @@ export default function VehicleCard({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !loading && esFormularioValido) {
-      onSave(nombre, matricula, tipo, Number(consumo));
+      onSave(nombre, matricula, tipo, Number(consumo), favorito);
     }
   };
 
   return (
     <div className={styles.card}>
-      <button
-        className={styles.closeBtn}
-        onClick={onClose}
-        disabled={loading}
-      >
+      {/* CERRAR */}
+      <button className={styles.closeBtn} onClick={onClose} disabled={loading}>
         ×
       </button>
 
+      {/* NOMBRE */}
       <div className={styles.field}>
         <label>Nombre del vehículo</label>
         <input
@@ -81,12 +83,18 @@ export default function VehicleCard({
           onKeyDown={handleKeyDown}
           disabled={loading}
           className={`${styles.activeInput} ${
-            error ? styles.inputError : ""
+            nombre.length > 0 && nombre.length < 3 ? styles.inputError : ""
           }`}
           autoFocus
         />
+        {nombre.length > 0 && nombre.length < 3 && (
+          <span className={styles.helperTextError}>
+            El nombre debe tener al menos 3 caracteres
+          </span>
+        )}
       </div>
 
+      {/* MATRÍCULA */}
       <div className={styles.field}>
         <label>Matrícula</label>
         <input
@@ -94,13 +102,21 @@ export default function VehicleCard({
           value={matricula}
           onChange={(e) => setMatricula(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={loading || isEditMode} // 👈 NO editable en HU12
+          disabled={loading || isEditMode}
           className={`${styles.activeInput} ${
-            error ? styles.inputError : ""
+            !isEditMode && matricula.length > 0 && matricula.length < 3
+              ? styles.inputError
+              : ""
           }`}
         />
+        {!isEditMode && matricula.length > 0 && matricula.length < 3 && (
+          <span className={styles.helperTextError}>
+            La matrícula es obligatoria al crear el vehículo
+          </span>
+        )}
       </div>
 
+      {/* TIPO */}
       <div className={styles.field}>
         <label>Tipo de vehículo</label>
         <select
@@ -108,7 +124,7 @@ export default function VehicleCard({
           onChange={(e) =>
             setTipo(e.target.value as "COMBUSTION" | "ELECTRICO")
           }
-          disabled={loading || isEditMode} // 👈 NO editable en HU12
+          disabled={loading || isEditMode}
           className={styles.select}
         >
           <option value="COMBUSTION">Combustión</option>
@@ -116,6 +132,7 @@ export default function VehicleCard({
         </select>
       </div>
 
+      {/* CONSUMO */}
       <div className={styles.field}>
         <label>Consumo (l/100km o kWh/100km)</label>
         <input
@@ -129,30 +146,24 @@ export default function VehicleCard({
           onKeyDown={handleKeyDown}
           disabled={loading}
           className={`${styles.activeInput} ${
-            error ? styles.inputError : ""
+            consumo !== "" && Number(consumo) < 0 ? styles.inputError : ""
           }`}
         />
-        {error && <span className={styles.errorText}>{error}</span>}
+        {consumo !== "" && Number(consumo) < 0 && (
+          <span className={styles.helperTextError}>
+            El consumo debe ser un valor positivo
+          </span>
+        )}
       </div>
 
+      {/* FOOTER */}
       <div className={styles.footer}>
-        <button className={styles.starBtn} disabled>
-          ☆
-        </button>
-
         <button
           className={styles.addBtn}
           onClick={() =>
-            onSave(nombre, matricula, tipo, Number(consumo))
+            onSave(nombre, matricula, tipo, consumo as number, favorito)
           }
           disabled={loading || !esFormularioValido}
-          style={{
-            opacity: loading || !esFormularioValido ? 0.5 : 1,
-            cursor:
-              loading || !esFormularioValido
-                ? "not-allowed"
-                : "pointer",
-          }}
         >
           {loading
             ? "Guardando..."
@@ -161,6 +172,18 @@ export default function VehicleCard({
             : "Añadir vehículo"}
         </button>
       </div>
+
+      {/* ⭐ FAVORITO */}
+      {!isEditMode && (
+        <button
+          className={styles.starBtn}
+          title="Marcar como favorito"
+          onClick={() => setFavorito((f) => !f)}
+          disabled={loading}
+        >
+          {favorito ? "⭐" : "☆"}
+        </button>
+      )}
     </div>
   );
 }

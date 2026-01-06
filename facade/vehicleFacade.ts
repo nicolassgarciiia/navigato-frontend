@@ -1,4 +1,4 @@
-import { createVehicle, fetchVehicles, deleteVehicle as deleteVehicleRequest, updateVehicle as updateVehicleRequest} from "../lib/api";
+import { createVehicle, fetchVehicles, deleteVehicle as deleteVehicleRequest, updateVehicle as updateVehicleRequest, toggleVehicleFavorite} from "../lib/api";
 
 
 type FacadeResult<T> =
@@ -19,37 +19,31 @@ export const vehicleFacade = {
   // HU09 – Registrar vehículo
   // =====================================================
   async registerVehicle(
-    userEmail: string,
-    nombre: string,
-    matricula: string,
-    tipo: "COMBUSTION" | "ELECTRICO",
-    consumo: number
-  ): Promise<FacadeResult<any>> {
-    // Validación mínima (mismo estilo que POI)
-    if (!userEmail) {
-      return {
-        ok: false,
-        error: "Usuario no autenticado",
-      };
-    }
+  nombre: string,
+  matricula: string,
+  tipo: "COMBUSTION" | "ELECTRICO",
+  consumo: number,
+  favorito: boolean
+): Promise<FacadeResult<any>> {
+  const result = await createVehicle(
+    nombre,
+    matricula,
+    tipo,
+    consumo,
+    favorito
+  );
 
-    const result = await createVehicle(
-      userEmail,
-      nombre,
-      matricula,
-      tipo,
-      Number(consumo)
-    );
+  if (!result?.ok) {
+    return errorResult(result);
+  }
 
-    if (!result?.ok) {
-      return errorResult(result);
-    }
+  return {
+    ok: true,
+    data: result.data,
+  };
+}
+,
 
-    return {
-      ok: true,
-      data: result,
-    };
-  },
 // =====================================================
 // HU10 – Listar vehículos
 // =====================================================
@@ -113,9 +107,23 @@ async updateVehicle(
   }
 
   return { ok: true, data: true };
+},
+// =====================================================
+// HU20 – Marcar vehículo como favorito
+// =====================================================
+async toggleFavorite(vehicleId: string): Promise<FacadeResult<true>> {
+  if (!vehicleId) {
+    return { ok: false, error: "Datos inválidos" };
+  }
+
+  const result = await toggleVehicleFavorite(vehicleId);
+
+  if (!result?.ok) {
+    return errorResult(result);
+  }
+
+  return { ok: true, data: true };
 }
-
-
 
 };
 

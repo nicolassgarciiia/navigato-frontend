@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import RouteFromPOIsCard from "../routes/RouteFromPOIsCard";
+
 
 import authFacade from "@/facade/authFacade";
 import { poiFacade } from "@/facade/poiFacade";
@@ -94,6 +96,8 @@ export default function HomePage() {
   const toponymInputRef = useRef<HTMLInputElement>(null);
   const [showVehicleList, setShowVehicleList] = useState(false);
   const [vehicleToEdit, setVehicleToEdit] = useState<any>(null);
+  const [showRouteFromPOIs, setShowRouteFromPOIs] = useState(false);
+
 
   // ======================================================
   // SEGURIDAD
@@ -191,36 +195,35 @@ const handleAddByToponym = async (toponimo: string) => {
   // VEHÍCULOS
   // ======================================================
   const handleSaveVehicle = async (
-    nombre: string,
-    matricula: string,
-    tipo: "COMBUSTION" | "ELECTRICO",
-    consumo: number
-  ) => {
-    const user = authFacade.getUser();
-    if (!user?.correo) return;
+  nombre: string,
+  matricula: string,
+  tipo: "COMBUSTION" | "ELECTRICO",
+  consumo: number,
+  favorito: boolean
+) => {
+  setIsSaving(true);
+  setBackendError(null);
 
-    setIsSaving(true);
-    setBackendError(null);
+  const result = await vehicleFacade.registerVehicle(
+    nombre,
+    matricula,
+    tipo,
+    consumo,
+    favorito
+  );
 
-    const result = await vehicleFacade.registerVehicle(
-      user.correo,
-      nombre,
-      matricula,
-      tipo,
-      consumo
-    );
+  if (result.ok) {
+    setToast({ message: "¡Vehículo añadido con éxito!", type: "success" });
+    setShowVehicleCard(false);
+  } else {
+    const message = getHumanErrorMessage(result.error);
+    setBackendError(message);
+    setToast({ message, type: "error" });
+  }
 
-    if (result.ok) {
-      setToast({ message: "¡Vehículo añadido con éxito!", type: "success" });
-      setShowVehicleCard(false);
-    } else {
-      const message = getHumanErrorMessage(result.error);
-      setBackendError(message);
-      setToast({ message, type: "error" });
-    }
+  setIsSaving(false);
+};
 
-    setIsSaving(false);
-  };
   const handleUpdateVehicle = async (vehicleId: string, consumo: number) => {
   const user = authFacade.getUser();
   if (!user?.correo) return;
@@ -276,46 +279,49 @@ const handleAddByToponym = async (toponimo: string) => {
       <HomeNavbar onToggleSidebar={() => setIsSidebarOpen((p) => !p)} />
 
       {/* SIDEBAR */}
-      <div style={{ position: "absolute", top: 85, left: "2.5%", zIndex: 2000 }}>
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          onAddLocationClick={() => {
-            setIsSidebarOpen(false);
-            setShowPOIList(false);
-            setSearchMode("coords");
-            setTimeout(() => coordInputRef.current?.focus(), 100);
-          }}
-          onListLocationsClick={() => {
-            setIsSidebarOpen(false);
-            setShowPOIList(false);
-            setTimeout(() => setShowPOIList(true), 0);
-          }}
-          onAddVehicleClick={() => {
-            setIsSidebarOpen(false);
-            setShowPOIList(false);
-            setSelectedPOI(null);
-            setBackendError(null);
-            setShowVehicleCard(true);
-          }}
-          onListVehiclesClick={() => {
-            setIsSidebarOpen(false);
-            setShowVehicleList(true);
-          }}  
-          onCalculateRouteClick={() => {
-            setShowPOIList(false);
-            setShowVehicleList(false);
-            setSelectedPOI(null);
-            setBackendError(null);
-            setShowRouteCard(true);
-          }}
+<div style={{ position: "absolute", top: 85, left: "2.5%", zIndex: 2000 }}>
+  <Sidebar
+    isOpen={isSidebarOpen}
+    onClose={() => setIsSidebarOpen(false)}
+    onAddLocationClick={() => {
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setSearchMode("coords");
+      setTimeout(() => coordInputRef.current?.focus(), 100);
+    }}
+    onListLocationsClick={() => {
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setTimeout(() => setShowPOIList(true), 0);
+    }}
+    onAddVehicleClick={() => {
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setSelectedPOI(null);
+      setBackendError(null);
+      setShowVehicleCard(true);
+    }}
+    onListVehiclesClick={() => {
+      setIsSidebarOpen(false);
+      setShowVehicleList(true);
+    }}
+    onCalculateRouteClick={() => {
+      // 🔥 NUEVO: selector de POIs
+      setIsSidebarOpen(false);
+      setShowPOIList(false);
+      setShowVehicleList(false);
+      setSelectedPOI(null);
+      setBackendError(null);
 
-          onListRoutesClick={() => {
-            setShowSavedRoutes(true);
-          }}
+      setShowRouteFromPOIs(true);
+    }}
+    onListRoutesClick={() => {
+      setShowSavedRoutes(true);
+      setIsSidebarOpen(false);
+    }}
+  />
+</div>
 
-        />
-      </div>
 
       {/* ===== SELECTOR DE BÚSQUEDA (RESTAURADO) ===== */}
       <div
@@ -522,7 +528,7 @@ const handleAddByToponym = async (toponimo: string) => {
     vehicle={vehicleToEdit}
     loading={isSaving}
     error={backendError}
-    onSave={(nombre, matricula, tipo, consumo) =>
+    onSave={(nombre, matricula, tipo, consumo, favorito) =>
       handleUpdateVehicle(vehicleToEdit.id, consumo)
     }
     onClose={() => {
@@ -556,6 +562,28 @@ const handleAddByToponym = async (toponimo: string) => {
     }}
   />
 )}
+{showRouteFromPOIs && (
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
+    }}
+  >
+    <RouteFromPOIsCard
+      onClose={() => setShowRouteFromPOIs(false)}
+      onConfirm={(origin, destination) => {
+        // Reutiliza tu flujo actual: RouteCard se abre con estos estados
+        setRouteOrigin(origin);
+        setRouteDestination(destination);
+        setShowRouteFromPOIs(false);
+      }}
+    />
+  </div>
+)}
+
 
 
 

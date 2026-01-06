@@ -234,23 +234,24 @@ export async function deletePOI(userEmail: string, poiId: string) {
 // ====================================================================
 
 export async function createVehicle(
-  userEmail: string,
   nombre: string,
   matricula: string,
   tipo: "COMBUSTION" | "ELECTRICO",
-  consumo: number
+  consumo: number,
+  favorito: boolean
 ) {
   return request("/vehicles", {
     method: "POST",
     body: JSON.stringify({
-      correo: userEmail,
       nombre,
       matricula,
       tipo,
-      consumo: Number(consumo),
+      consumo: consumo,
+      favorito, 
     }),
   });
 }
+
 // ======================================================
 // HU10 – VEHÍCULOS
 // ======================================================
@@ -387,9 +388,8 @@ export async function toggleRouteFavorite(name: string) {
 export async function setDefaultVehicle(vehicleId: string) {
   return request("/user-preferences/default-vehicle", {
     method: "PUT",
-    body: JSON.stringify({
-      vehicleId,
-    }),
+    cache: "no-store",
+    body: JSON.stringify({ vehicleId }),
   });
 }
 
@@ -399,11 +399,31 @@ export async function setDefaultVehicle(vehicleId: string) {
 export async function setDefaultRouteType(routeType: string) {
   return request("/user-preferences/default-route-type", {
     method: "PUT",
-    body: JSON.stringify({
-      routeType,
-    }),
+    cache: "no-store",
+    body: JSON.stringify({ routeType }),
   });
 }
+
+
+// HU20 – Toggle vehículo favorito
+export async function toggleVehicleFavorite(vehicleId: string) {
+  return request(`/vehicles/${encodeURIComponent(vehicleId)}/favorite`, {
+    method: "POST",
+  });
+}
+
+// ======================================================
+// – Toggle POI favorito
+// ======================================================
+export async function togglePoiFavorite(poiId: string, correo: string) {
+  return request(`/pois/${encodeURIComponent(poiId)}/favorite`, {
+    method: "POST",
+    body: JSON.stringify({ correo }),
+  });
+}
+
+
+
 
 
 // ======================================================
@@ -412,6 +432,7 @@ export async function setDefaultRouteType(routeType: string) {
 export async function fetchUserPreferences() {
   return request("/user-preferences", {
     method: "GET",
+    cache: "no-store",
   });
 }
 

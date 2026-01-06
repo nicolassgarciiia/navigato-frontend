@@ -5,7 +5,6 @@ import authFacade from "@/facade/authFacade";
 import { vehicleFacade } from "@/facade/vehicleFacade";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import styles from "./VehicleList.module.css";
-import userPreferencesFacade from "@/facade/userPreferencesFacade";
 
 interface Vehicle {
   id: string;
@@ -31,11 +30,6 @@ export default function VehicleList({
 
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
-  const [defaultVehicleId, setDefaultVehicleId] = useState<string | null>(null);
-  const [savingDefaultId, setSavingDefaultId] = useState<string | null>(null);
-
-
-
 
   const correo = useMemo(() => {
     try {
@@ -49,40 +43,32 @@ export default function VehicleList({
     }
   }, []);
 
-useEffect(() => {
-  async function loadVehicles() {
-    setStatus("loading");
+  // ===============================
+  // Cargar vehículos
+  // ===============================
+  useEffect(() => {
+    async function loadVehicles() {
+      setStatus("loading");
 
-    const vehiclesResult = await vehicleFacade.listVehicles();
-    if (!vehiclesResult.ok) {
-      setError(vehiclesResult.error);
-      setStatus("error");
-      return;
+      const vehiclesResult = await vehicleFacade.listVehicles();
+      if (!vehiclesResult.ok) {
+        setError(vehiclesResult.error);
+        setStatus("error");
+        return;
+      }
+
+      setVehicles(vehiclesResult.data);
+      setStatus("ready");
     }
 
-    setVehicles(vehiclesResult.data);
-
-    // 🔑 cargar preferencias DESPUÉS
-    const prefsResult = await userPreferencesFacade.getPreferences();
-
-    if (prefsResult.ok) {
-      setDefaultVehicleId(prefsResult.data?.defaultVehicleId ?? null);
-    } else {
-      setDefaultVehicleId(null);
-    }
-
-    setStatus("ready");
-  }
-
-  loadVehicles();
-}, []);
-
-
-
-
+    loadVehicles();
+  }, []);
 
   const isDeleting = (id: string) => deletingIds.has(id);
 
+  // ===============================
+  // Borrado
+  // ===============================
   async function confirmDelete() {
     if (!vehicleToDelete || !correo) return;
 
@@ -93,7 +79,6 @@ useEffect(() => {
 
     const deleted = vehicleToDelete;
     setVehicleToDelete(null);
-
     setVehicles((prev) => prev.filter((v) => v.id !== id));
 
     const result = await vehicleFacade.deleteVehicle(correo, id);
@@ -172,40 +157,41 @@ useEffect(() => {
                   ✏️
                 </span>
 
-                {/* PREDETERMINADO */}
+                {/* ⭐ FAVORITO */}
                 <span
                   className={styles.star}
-                  title="Marcar como vehículo por defecto"
+                  title="Marcar como favorito"
                   onClick={async (e) => {
                     e.stopPropagation();
-                    console.log("CLICK STAR:", vehicle.id);
-                    // evitar clicks dobles / spam
-                    if (savingDefaultId) return;
-
-                    setSavingDefaultId(vehicle.id);
                     setError(null);
 
-                    const res = await userPreferencesFacade.setDefaultVehicle(vehicle.id);
-                    console.log("SET DEFAULT RESULT:", res);
-                    setSavingDefaultId(null);
+                    setVehicles((prev) =>
+                      prev.map((v) =>
+                        v.id === vehicle.id
+                          ? { ...v, favorito: !v.favorito }
+                          : v
+                      )
+                    );
+
+                    const res = await vehicleFacade.toggleFavorite(vehicle.id);
 
                     if (!res.ok) {
-                      setError(res.error ?? "No se pudo guardar el vehículo por defecto");
-                      return;
+                      setVehicles((prev) =>
+                        prev.map((v) =>
+                          v.id === vehicle.id
+                            ? { ...v, favorito: !v.favorito }
+                            : v
+                        )
+                      );
+                      setError(
+                        res.error ?? "No se pudo marcar como favorito"
+                      );
                     }
-
-                    setDefaultVehicleId(vehicle.id);
                   }}
-                  style={{
-                    opacity: savingDefaultId === vehicle.id ? 0.6 : 1,
-                    pointerEvents: savingDefaultId === vehicle.id ? "none" : "auto",
-                    cursor: "pointer",
-                  }}
+                  style={{ cursor: "pointer" }}
                 >
-                  {vehicle.id === defaultVehicleId ? "⭐" : "☆"}
+                  {vehicle.favorito ? "⭐" : "☆"}
                 </span>
-
-
 
                 {/* BORRAR */}
                 <span

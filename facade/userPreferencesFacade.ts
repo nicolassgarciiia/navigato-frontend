@@ -1,16 +1,27 @@
-import { fetchUserPreferences, setDefaultVehicle, setDefaultRouteType } from "@/lib/api";
+import {
+  fetchUserPreferences,
+  setDefaultVehicle,
+  setDefaultRouteType,
+} from "@/lib/api";
 
 const userPreferencesFacade = {
   async getPreferences() {
     const res = await fetchUserPreferences();
 
     if (!res?.ok) {
-      return { ok: false, error: res?.error ?? "Error al cargar preferencias" };
+      return {
+        ok: false,
+        error: res?.error ?? "Error al cargar preferencias",
+      };
     }
 
+    // 🔥 CLAVE: request() NO devuelve res.data
     return {
       ok: true,
-      data: res.data, // ← AQUÍ está defaultVehicleId
+      data: {
+        defaultVehicleId: res.defaultVehicleId ?? "",
+        defaultRouteType: res.defaultRouteType ?? "economica",
+      },
     };
   },
 

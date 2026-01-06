@@ -4,21 +4,47 @@ import { useEffect, useState } from "react";
 import { vehicleFacade } from "@/facade/vehicleFacade";
 import userPreferencesFacade from "@/facade/userPreferencesFacade";
 
-export default function RoutePreferencesCard({ onClose }: { onClose: () => void }) {
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [defaultVehicle, setDefaultVehicle] = useState<string | null>(null);
-  const [defaultRouteType, setDefaultRouteType] =
-    useState<"rapida" | "corta" | "economica">("economica");
+interface Vehicle {
+  id: string;
+  nombre: string;
+}
 
-  // cargar vehículos del usuario
+type RouteType = "rapida" | "corta" | "economica";
+
+export default function RoutePreferencesCard({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [defaultVehicle, setDefaultVehicle] = useState<string>("");
+  const [defaultRouteType, setDefaultRouteType] =
+    useState<RouteType>("economica");
+
+  // 1️⃣ Cargar vehículos
   useEffect(() => {
-    async function load() {
+    async function loadVehicles() {
       const res = await vehicleFacade.listVehicles();
       if (res.ok && Array.isArray(res.data)) {
         setVehicles(res.data);
       }
     }
-    load();
+
+    loadVehicles();
+  }, []);
+
+  // 2️⃣ Cargar preferencias guardadas
+  useEffect(() => {
+    async function loadPreferences() {
+      const res = await userPreferencesFacade.getPreferences();
+
+      if (res.ok && res.data) {
+        setDefaultVehicle(res.data.defaultVehicleId);
+        setDefaultRouteType(res.data.defaultRouteType);
+      }
+    }
+
+    loadPreferences();
   }, []);
 
   async function saveVehicle() {
@@ -42,7 +68,7 @@ export default function RoutePreferencesCard({ onClose }: { onClose: () => void 
         <p className="text-xs font-medium">Vehículo por defecto</p>
         <select
           className="border rounded px-2 py-1 w-full text-sm"
-          value={defaultVehicle ?? ""}
+          value={defaultVehicle}
           onChange={(e) => setDefaultVehicle(e.target.value)}
         >
           <option value="">Selecciona un vehículo</option>
@@ -68,7 +94,7 @@ export default function RoutePreferencesCard({ onClose }: { onClose: () => void 
           className="border rounded px-2 py-1 w-full text-sm"
           value={defaultRouteType}
           onChange={(e) =>
-            setDefaultRouteType(e.target.value as any)
+            setDefaultRouteType(e.target.value as RouteType)
           }
         >
           <option value="rapida">🚀 Más rápida</option>

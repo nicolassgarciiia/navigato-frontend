@@ -46,6 +46,7 @@
 
 /* ITEM */
 .item {
+  position: relative; /* 🔑 IMPORTANTE */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -58,6 +59,7 @@
   background: #fff;
 }
 
+/* INFO */
 .info {
   display: flex;
   flex-direction: column;
@@ -79,11 +81,36 @@
   margin-top: 2px;
 }
 
-/* ICONO */
+/* ICONOS COMUNES (⭐ ❤️ ✏️ 🗑️) */
+.star,
+.heart,
+.edit,
 .trash {
   font-size: 18px;
+  cursor: pointer;
+  pointer-events: auto; /* 🔑 GARANTIZA CLICK */
+  user-select: none;
+  margin-left: 8px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+/* HOVER VISUAL (para comprobar que funcionan) */
+.star:hover,
+.heart:hover,
+.edit:hover,
+.trash:hover {
+  transform: scale(1.15);
+  opacity: 0.85;
+}
+
+/* EDIT */
+.edit {
+  font-size: 16px;
+}
+
+/* TRASH */
+.trash {
   color: #aaa;
-  cursor: not-allowed;
 }
 
 /* VACÍO */
@@ -93,13 +120,3 @@
   color: #666;
   font-size: 0.9rem;
 }
-.edit {
-  font-size: 16px;
-  cursor: pointer;
-  opacity: 0.8;
-}
-
-.edit:hover {
-  opacity: 1;
-}
-

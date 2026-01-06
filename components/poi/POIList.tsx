@@ -31,7 +31,9 @@ export default function POIList({
   const [poiToDelete, setPoiToDelete] = useState<POI | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
-  // Centralizamos obtención del correo
+  // ===============================
+  // Usuario (solo para borrado)
+  // ===============================
   const correo = useMemo(() => {
     try {
       const user = authFacade.getUser();
@@ -45,7 +47,7 @@ export default function POIList({
   }, []);
 
   // ===============================
-  // Carga inicial de POIs
+  // Carga inicial
   // ===============================
   useEffect(() => {
     async function loadPOIs() {
@@ -71,6 +73,39 @@ export default function POIList({
   }, [correo]);
 
   // ===============================
+  // ⭐ FAVORITO (IGUAL QUE VEHICLE)
+  // ===============================
+  async function toggleFavorite(poiId: string) {
+    let previousFavorite = false;
+
+    // Optimistic UI
+    setPois((prev) =>
+      prev.map((p) => {
+        if (p.id === poiId) {
+          previousFavorite = p.favorito;
+          return { ...p, favorito: !p.favorito };
+        }
+        return p;
+      })
+    );
+
+    if (!correo) return;
+
+const res = await poiFacade.toggleFavoritePOI(poiId, correo);
+
+
+    if (!res.ok) {
+      // Rollback correcto
+      setPois((prev) =>
+        prev.map((p) =>
+          p.id === poiId ? { ...p, favorito: previousFavorite } : p
+        )
+      );
+      setError(res.error ?? "No se pudo marcar como favorito");
+    }
+  }
+
+  // ===============================
   // Helpers de borrado
   // ===============================
   const isDeleting = (id: string) => deletingIds.has(id);
@@ -85,9 +120,6 @@ export default function POIList({
       return next;
     });
 
-  // ===============================
-  // Confirmar borrado
-  // ===============================
   async function confirmDelete() {
     if (!poiToDelete || !correo) return;
 
@@ -100,7 +132,7 @@ export default function POIList({
     const deleted = poiToDelete;
     setPoiToDelete(null);
 
-    // Optimistic UI
+    // Optimistic delete
     setPois((prev) => prev.filter((p) => p.id !== id));
 
     const result = await poiFacade.deletePOI(correo, id);
@@ -126,7 +158,7 @@ export default function POIList({
   );
 
   // ===============================
-  // ERROR
+  // ERROR / LOADING
   // ===============================
   if (status === "error") {
     return (
@@ -137,9 +169,6 @@ export default function POIList({
     );
   }
 
-  // ===============================
-  // LOADING
-  // ===============================
   if (status === "loading") {
     return (
       <div className={styles.wrapper}>
@@ -181,6 +210,19 @@ export default function POIList({
                   </span>
                 </div>
 
+                {/* ⭐ FAVORITO */}
+                <span
+                  className={styles.star}
+                  title="Favorito"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(poi.id);
+                  }}
+                >
+                  {poi.favorito ? "⭐" : "☆"}
+                </span>
+
+                {/* 🗑️ BORRAR */}
                 <span
                   className={styles.trash}
                   title="Delete"
@@ -204,7 +246,7 @@ export default function POIList({
       {poiToDelete && (
         <ConfirmDialog
           title="Delete location"
-          message={`¿Estás seguro de que quieres borrar  "${poiToDelete.nombre}"? Esta acción no se puede deshacer.`}
+          message={`¿Estás seguro de que quieres borrar "${poiToDelete.nombre}"?`}
           confirmText={
             isDeleting(poiToDelete.id) ? "Deleting..." : "Delete"
           }

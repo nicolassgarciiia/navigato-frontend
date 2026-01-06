@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import authFacade from "@/facade/authFacade";
+import PreferencesModal from "@/components/preferences/PreferencesModal";
 import styles from "./HomeNavbar.module.css";
 
-// Añadimos la prop para controlar el Sidebar desde aquí
 interface HomeNavbarProps {
   onToggleSidebar: () => void;
 }
@@ -13,6 +13,7 @@ interface HomeNavbarProps {
 export default function HomeNavbar({ onToggleSidebar }: HomeNavbarProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
   const [user, setUser] = useState<any>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +39,7 @@ export default function HomeNavbar({ onToggleSidebar }: HomeNavbarProps) {
   const handleDeleteAccount = async () => {
     if (!user?.correo) return;
     const confirm = window.confirm(
-      "¿Estás seguro de que quieres eliminar tu cuenta? Se borrarán todos tus datos."
+      "¿Estás seguro de que quieres eliminar tu cuenta?"
     );
     if (confirm) {
       const res = await authFacade.deleteAccount(user.correo);
@@ -47,59 +48,73 @@ export default function HomeNavbar({ onToggleSidebar }: HomeNavbarProps) {
   };
 
   return (
-    <nav className={styles.navbar}>
-      {/* SECCIÓN IZQUIERDA: HAMBURGUESA */}
-      <div className={styles.leftSection}>
-        <button className={styles.hamburgerBtn} onClick={onToggleSidebar}>
-          ☰
-        </button>
-      </div>
-
-      {/* SECCIÓN CENTRAL: LOGO */}
-      <div className={styles.logo} onClick={() => router.push("/home")}>
-        <img
-          src="/transparente.png"
-          alt="Navigato"
-          className={styles.logoImage}
-        />
-      </div>
-
-      {/* SECCIÓN DERECHA: USUARIO (Tu lógica intacta) */}
-      {user && (
-        <div className={styles.userSection} ref={menuRef}>
-          <button
-            className={styles.avatarButton}
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <div className={styles.userInfoPreview}>
-              <span className={styles.userNamePreview}>{user.nombre}</span>
-            </div>
-
-            <div className={styles.avatarCircle}>
-              {user.nombre ? user.nombre.charAt(0).toUpperCase() : "U"}
-            </div>
-
-            <svg className={styles.chevron} viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+    <>
+      <nav className={styles.navbar}>
+        {/* IZQUIERDA */}
+        <div className={styles.leftSection}>
+          <button className={styles.hamburgerBtn} onClick={onToggleSidebar}>
+            ☰
           </button>
-
-          {isOpen && (
-            <div className={styles.dropdown}>
-              <button className={styles.menuItem} onClick={handleLogout}>
-                Cerrar sesión
-              </button>
-              <div className={styles.divider}></div>
-              <button
-                className={`${styles.menuItem} ${styles.deleteItem}`}
-                onClick={handleDeleteAccount}
-              >
-                Eliminar cuenta
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* CENTRO */}
+        <div className={styles.logo} onClick={() => router.push("/home")}>
+          <img
+            src="/transparente.png"
+            alt="Navigato"
+            className={styles.logoImage}
+          />
+        </div>
+
+        {/* DERECHA */}
+        {user && (
+          <div className={styles.userSection} ref={menuRef}>
+            <button
+              className={styles.avatarButton}
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              <span className={styles.userNamePreview}>{user.nombre}</span>
+              <div className={styles.avatarCircle}>
+                {user.nombre?.charAt(0).toUpperCase()}
+              </div>
+            </button>
+
+            {isOpen && (
+              <div className={styles.dropdown}>
+                <button
+                  className={styles.menuItem}
+                  onClick={() => {
+                    setShowPreferences(true);
+                    setIsOpen(false);
+                  }}
+                >
+                  Modificar preferencias
+                </button>
+
+                <div className={styles.divider} />
+
+                <button className={styles.menuItem} onClick={handleLogout}>
+                  Cerrar sesión
+                </button>
+
+                <div className={styles.divider} />
+
+                <button
+                  className={`${styles.menuItem} ${styles.deleteItem}`}
+                  onClick={handleDeleteAccount}
+                >
+                  Eliminar cuenta
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </nav>
+
+      {/* MODAL DE PREFERENCIAS */}
+      {showPreferences && (
+        <PreferencesModal onClose={() => setShowPreferences(false)} />
       )}
-    </nav>
+    </>
   );
 }
