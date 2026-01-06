@@ -273,15 +273,12 @@ export async function deleteVehicle(userEmail: string, vehicleId: string) {
   );
 }
 // ======================================================
-// HU12 – Update Vehicle (API)
+// HU12 – Update Vehicle
 // ======================================================
 export async function updateVehicle(
   userEmail: string,
   vehicleId: string,
-  data: {
-    nombre?: string;
-    consumo?: number;
-  }
+  consumo: number
 ) {
   return request(
     `/vehicles/${encodeURIComponent(vehicleId)}?correo=${encodeURIComponent(
@@ -289,10 +286,7 @@ export async function updateVehicle(
     )}`,
     {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ consumo }),
     }
   );
 }
@@ -441,7 +435,6 @@ export async function fetchUserPreferences() {
     cache: "no-store",
   });
 }
-
 
 
 
