@@ -13,20 +13,13 @@ interface Vehicle {
 }
 
 interface VehicleCardProps {
-  vehicle?: Vehicle; // si viene, estamos editando
-  onSave: (data:
-    | {
-        // crear vehículo
-        nombre: string;
-        matricula: string;
-        tipo: "COMBUSTION" | "ELECTRICO";
-        consumo: number;
-      }
-    | {
-        // editar vehículo (HU12)
-        nombre?: string;
-        consumo?: number;
-      }
+  vehicle?: Vehicle;
+  onSave: (
+    nombre: string,
+    matricula: string,
+    tipo: "COMBUSTION" | "ELECTRICO",
+    consumo: number,
+    favorito: boolean
   ) => void;
   onClose: () => void;
   error?: string | null;
@@ -44,8 +37,7 @@ export default function VehicleCard({
 
   const [nombre, setNombre] = useState("");
   const [matricula, setMatricula] = useState("");
-  const [tipo, setTipo] =
-    useState<"COMBUSTION" | "ELECTRICO">("COMBUSTION");
+  const [tipo, setTipo] = useState<"COMBUSTION" | "ELECTRICO">("COMBUSTION");
   const [consumo, setConsumo] = useState<number | "">("");
   const [favorito, setFavorito] = useState(false);
 
@@ -65,32 +57,12 @@ export default function VehicleCard({
   const esFormularioValido =
     nombre.trim().length >= 3 &&
     consumo !== "" &&
-    Number(consumo) > 0 &&
+    Number(consumo) >= 0 &&
     (isEditMode || matricula.trim().length >= 3);
 
-  const handleSave = () => {
-    if (!esFormularioValido || loading) return;
-
-    if (isEditMode) {
-      // HU12 – SOLO nombre y consumo
-      onSave({
-        nombre,
-        consumo: Number(consumo),
-      });
-    } else {
-      // Alta de vehículo
-      onSave({
-        nombre,
-        matricula,
-        tipo,
-        consumo: Number(consumo),
-      });
-    }
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSave();
+    if (e.key === "Enter" && !loading && esFormularioValido) {
+      onSave(nombre, matricula, tipo, Number(consumo), favorito);
     }
   };
 
@@ -130,7 +102,7 @@ export default function VehicleCard({
           value={matricula}
           onChange={(e) => setMatricula(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={loading || isEditMode} // no editable en HU12
+          disabled={loading || isEditMode}
           className={`${styles.activeInput} ${
             !isEditMode && matricula.length > 0 && matricula.length < 3
               ? styles.inputError
@@ -152,7 +124,7 @@ export default function VehicleCard({
           onChange={(e) =>
             setTipo(e.target.value as "COMBUSTION" | "ELECTRICO")
           }
-          disabled={loading || isEditMode} // no editable en HU12
+          disabled={loading || isEditMode}
           className={styles.select}
         >
           <option value="COMBUSTION">Combustión</option>
@@ -165,8 +137,7 @@ export default function VehicleCard({
         <label>Consumo (l/100km o kWh/100km)</label>
         <input
           type="number"
-          min={0.1}
-          step={0.1}
+          min={0}
           placeholder="Ej: 6.5"
           value={consumo}
           onChange={(e) =>
@@ -189,7 +160,9 @@ export default function VehicleCard({
       <div className={styles.footer}>
         <button
           className={styles.addBtn}
-          onClick={handleSave}
+          onClick={() =>
+            onSave(nombre, matricula, tipo, consumo as number, favorito)
+          }
           disabled={loading || !esFormularioValido}
         >
           {loading
