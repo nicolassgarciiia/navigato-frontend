@@ -9,6 +9,7 @@ interface Route {
   nombre: string;
   distancia: number;
   duracion: number;
+  favorito?: boolean;
 }
 
 type LoadStatus = "loading" | "error" | "ready";
@@ -23,11 +24,16 @@ export default function RouteList({
   const [routes, setRoutes] = useState<Route[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [routeToDelete, setRouteToDelete] = useState<Route | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // ===============================
+  // CARGA INICIAL
+  // ===============================
   useEffect(() => {
     async function load() {
       const res = await routeFacade.list();
       if (!res.ok) {
+        setError(res.error ?? "Error al cargar rutas");
         setStatus("error");
         return;
       }
@@ -37,49 +43,116 @@ export default function RouteList({
     load();
   }, []);
 
+  // ===============================
+  // ⭐ FAVORITO (MISMA LÓGICA QUE ANTES)
+  // ===============================
+  async function toggleFavorite(nombre: string) {
+    const res = await routeFacade.toggleFavorite(nombre);
+    if (!res.ok) return;
+
+    setRoutes((prev) =>
+      prev.map((r) =>
+        r.nombre === nombre ? { ...r, favorito: !r.favorito } : r
+      )
+    );
+  }
+
+  // ===============================
+  // BORRADO
+  // ===============================
   async function confirmDelete() {
     if (!routeToDelete) return;
-    await routeFacade.delete(routeToDelete.nombre);
-    setRoutes((prev) =>
-      prev.filter((r) => r.nombre !== routeToDelete.nombre)
-    );
+
+    const deleted = routeToDelete;
     setRouteToDelete(null);
+
+    setRoutes((prev) =>
+      prev.filter((r) => r.nombre !== deleted.nombre)
+    );
+
+    const res = await routeFacade.delete(deleted.nombre);
+    if (!res.ok) {
+      setRoutes((prev) => [deleted, ...prev]);
+    }
   }
 
+  // ===============================
+  // HEADER
+  // ===============================
+  const renderHeader = () => (
+    <div className={styles.header}>
+      <span>LISTA DE RUTAS</span>
+      <button className={styles.close} onClick={onClose}>
+        ✕
+      </button>
+    </div>
+  );
+
+  // ===============================
+  // LOADING / ERROR
+  // ===============================
   if (status === "loading") {
-    return <div className={styles.wrapper}>Cargando rutas…</div>;
+    return (
+      <div className={styles.wrapper}>
+        {renderHeader()}
+        <div className={styles.empty}>Cargando rutas…</div>
+      </div>
+    );
   }
 
+  if (status === "error") {
+    return (
+      <div className={styles.wrapper}>
+        {renderHeader()}
+        <div className={styles.empty}>{error}</div>
+      </div>
+    );
+  }
+
+  // ===============================
+  // RENDER
+  // ===============================
   return (
     <div className={styles.wrapper}>
-      <div className={styles.header}>
-        <span>LISTA DE RUTAS</span>
-        <button onClick={onClose}>✕</button>
-      </div>
+      {renderHeader()}
 
       {routes.length === 0 ? (
         <div className={styles.empty}>No tienes rutas guardadas</div>
       ) : (
         <ul className={styles.list}>
-          {routes.map((r) => (
+          {routes.map((route) => (
             <li
-              key={r.nombre}
+              key={route.nombre}
               className={styles.item}
-              onClick={() => onSelectRoute(r)}
+              onClick={() => onSelectRoute(route)}
             >
-              <div>
-                <strong>{r.nombre}</strong>
-                <div className={styles.meta}>
-                  {(r.distancia / 1000).toFixed(1)} km ·{" "}
-                  {Math.round(r.duracion / 60)} min
-                </div>
+              <div className={styles.info}>
+                <span className={styles.name}>{route.nombre}</span>
+                <span className={styles.meta}>
+                  {(route.distancia / 1000).toFixed(1)} km ·{" "}
+                  {Math.round(route.duracion / 60)} min
+                </span>
               </div>
 
+              {/* ⭐ FAVORITO */}
               <span
-                className={styles.trash}
+                className={styles.star}
+                title="Favorito"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setRouteToDelete(r);
+                  toggleFavorite(route.nombre);
+                }}
+              >
+                {route.favorito ? "⭐" : "☆"}
+              </span>
+
+              {/* 🗑️ BORRAR */}
+              <span
+                className={styles.trash}
+                title="Eliminar"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRouteToDelete(route);
                 }}
               >
                 🗑️

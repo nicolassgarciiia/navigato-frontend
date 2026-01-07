@@ -25,7 +25,7 @@ import Toast from "@/components/ui/Toast";
 import VehicleList from "@/components/vehicle/VehicleList";
 import RouteCard from "../routes/RouteCard";
 import MapPointActionsCard from "@/components/map/MapPointActionsCard";
-import SavedRoutesCard from "../routes/SavedRoutesCard";
+import RouteList from "../routes/RouteList";
 
 const MapaPrincipal = dynamic(
   () => import("@/components/map/MapaPrincipal"),
@@ -540,14 +540,26 @@ const handleAddByToponym = async (toponimo: string) => {
 )}
 
 {showSavedRoutes && (
-  <SavedRoutesCard
-    onClose={() => setShowSavedRoutes(false)}
-    onSelectRoute={(savedRoute) => {
-      handleRouteCalculated(savedRoute.route);
-      setShowSavedRoutes(false);
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      zIndex: 3000,
     }}
-  />
+  >
+    <RouteList
+      onClose={() => setShowSavedRoutes(false)}
+      onSelectRoute={(route) => {
+        handleRouteCalculated(route);
+        setShowSavedRoutes(false);
+      }}
+    />
+  </div>
 )}
+
+
 
 
 
