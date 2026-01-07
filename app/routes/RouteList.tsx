@@ -128,10 +128,6 @@ export default function RouteList({
             >
               <div className={styles.info}>
                 <span className={styles.name}>{route.nombre}</span>
-                <span className={styles.meta}>
-                  {(route.distancia / 1000).toFixed(1)} km ·{" "}
-                  {Math.round(route.duracion / 60)} min
-                </span>
               </div>
 
               {/* ⭐ FAVORITO */}
