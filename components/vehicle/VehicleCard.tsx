@@ -54,11 +54,15 @@ export default function VehicleCard({
     }
   }, [vehicle]);
 
-  const esFormularioValido =
-    nombre.trim().length >= 3 &&
-    consumo !== "" &&
-    Number(consumo) >= 0 &&
-    (isEditMode || matricula.trim().length >= 3);
+  // ===============================
+  // Validación
+  // ===============================
+  const esFormularioValido = isEditMode
+    ? consumo !== "" && Number(consumo) >= 0
+    : nombre.trim().length >= 3 &&
+      matricula.trim().length >= 3 &&
+      consumo !== "" &&
+      Number(consumo) >= 0;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !loading && esFormularioValido) {
@@ -77,62 +81,32 @@ export default function VehicleCard({
       <div className={styles.field}>
         <label>Nombre del vehículo</label>
         <input
-          placeholder="Ej: Ferrari Roma"
           value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={loading}
-          className={`${styles.activeInput} ${
-            nombre.length > 0 && nombre.length < 3 ? styles.inputError : ""
-          }`}
-          autoFocus
+          disabled={isEditMode || loading}
+          className={styles.disabled}
         />
-        {nombre.length > 0 && nombre.length < 3 && (
-          <span className={styles.helperTextError}>
-            El nombre debe tener al menos 3 caracteres
-          </span>
-        )}
       </div>
 
       {/* MATRÍCULA */}
       <div className={styles.field}>
         <label>Matrícula</label>
         <input
-          placeholder="Ej: 1234 ABC"
           value={matricula}
-          onChange={(e) => setMatricula(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={loading || isEditMode}
-          className={`${styles.activeInput} ${
-            !isEditMode && matricula.length > 0 && matricula.length < 3
-              ? styles.inputError
-              : ""
-          }`}
+          disabled
+          className={styles.disabled}
         />
-        {!isEditMode && matricula.length > 0 && matricula.length < 3 && (
-          <span className={styles.helperTextError}>
-            La matrícula es obligatoria al crear el vehículo
-          </span>
-        )}
       </div>
 
       {/* TIPO */}
       <div className={styles.field}>
         <label>Tipo de vehículo</label>
-        <select
-          value={tipo}
-          onChange={(e) =>
-            setTipo(e.target.value as "COMBUSTION" | "ELECTRICO")
-          }
-          disabled={loading || isEditMode}
-          className={styles.select}
-        >
+        <select value={tipo} disabled className={styles.disabled}>
           <option value="COMBUSTION">Combustión</option>
           <option value="ELECTRICO">Eléctrico</option>
         </select>
       </div>
 
-      {/* CONSUMO */}
+      {/* CONSUMO (ÚNICO EDITABLE EN UPDATE) */}
       <div className={styles.field}>
         <label>Consumo (l/100km o kWh/100km)</label>
         <input
@@ -165,25 +139,9 @@ export default function VehicleCard({
           }
           disabled={loading || !esFormularioValido}
         >
-          {loading
-            ? "Guardando..."
-            : isEditMode
-            ? "Guardar cambios"
-            : "Añadir vehículo"}
+          {loading ? "Guardando..." : "Guardar cambios"}
         </button>
       </div>
-
-      {/* ⭐ FAVORITO */}
-      {!isEditMode && (
-        <button
-          className={styles.starBtn}
-          title="Marcar como favorito"
-          onClick={() => setFavorito((f) => !f)}
-          disabled={loading}
-        >
-          {favorito ? "⭐" : "☆"}
-        </button>
-      )}
     </div>
   );
 }
